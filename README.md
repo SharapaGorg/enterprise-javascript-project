@@ -12,6 +12,10 @@ Run tests:
 
 ```yarn test```
 
+# Презентация
+
+https://gamma.app/docs/ReadMind-AI-1kfhtt5qwr3w7b9
+
 # Идея проекта
 
 ## ReadMind AI
@@ -84,3 +88,4 @@ AI-модерируемые book clubs по интересам
 #### Авторизация
 
 - Email + пароль
+
