@@ -1,75 +1,91 @@
-# Nuxt Minimal Starter
+# Quick start
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Install dependencies:
 
-## Setup
+```yarn install```
 
-Make sure to install dependencies:
+Run application:
 
-```bash
-# npm
-npm install
+```yarn dev```
 
-# pnpm
-pnpm install
+Run tests:
 
-# yarn
-yarn install
+```yarn test```
 
-# bun
-bun install
-```
+# Презентация
 
-## Development Server
+https://gamma.app/docs/ReadMind-AI-1kfhtt5qwr3w7b9
 
-Start the development server on `http://localhost:3000`:
+# Идея проекта
 
-```bash
-# npm
-npm run dev
+## ReadMind AI
 
-# pnpm
-pnpm dev
+### AI-powered персональный литературный ассистент
 
-# yarn
-yarn dev
+## Ключевые AI-фичи
 
-# bun
-bun run dev
-```
+#### AI Book Matchmaking
 
-## Production
+- Диалоговый анализ: цели, интересы, уровень знаний, time constraints
+- Учет истории: что понравилось/не понравилось
 
-Build the application for production:
+[//]: # (Рекомендации на основе настроения, целей, контекста &#40;“книга для 3-часового полета”, “что почитать после расставания”&#41;)
 
-```bash
-# npm
-npm run build
+#### Smart Reading Lists [Может быть сделаем, если будет не сложно]
 
-# pnpm
-pnpm build
+AI генерирует персонализированные роадмапы (например: “путь от новичка к эксперту в психологии за 6 месяцев”)
 
-# yarn
-yarn build
+Адаптивные списки под цели: карьерный рост, саморазвитие, релакс
 
-# bun
-bun run build
-```
+#### Book Intelligence [FUTURED]
 
-Locally preview production build:
+- AI-саммари любой книги за 5 минут чтения
+- Интерактивные Q&A с “содержанием книги” (RAG)
+- Генерация mind maps и визуализация ключевых идей
 
-```bash
-# npm
-npm run preview
+#### Social Reading [FUTURED]
 
-# pnpm
-pnpm preview
+AI-модерируемые book clubs по интересам
+Генерация дискуссионных вопросов для группового обсуждения
 
-# yarn
-yarn preview
+## Монетизация
 
-# bun
-bun run preview
-```
+### Freemium модель:
 
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+- Free: базовый поиск, 3 AI-рекомендации/месяц
+- Pro ($15/мес): безлимитные саммари, персональные reading paths, экспорт в Kindle/Notion
+- Teams ($49/мес): корпоративные book clubs, learning paths для команд
+
+Цель: 135K платных пользователей = $2M MRR
+
+#### Дополнительные потоки:
+
+- Affiliate с книжными магазинами (Amazon, Audible) — 8-10% комиссия
+- Sponsored рекомендации от издательств
+- API для образовательных платформ
+
+### MVP
+
+#### Онбординг с вопросами
+
+- 5 вопросов для профиля читателя
+- Сохранение ответов в базу
+- Простой UI
+
+#### AI-рекомендации
+
+- Deepseek API генерирует 5-7 книг на основе ответов
+- Показываем: обложка, название, автор, краткое обоснование (“почему эта книга”)
+- Источник данных: Open Library API
+
+#### Личный список чтения
+
+- Добавление книг в “Хочу прочитать”
+- Три статуса: Хочу / Читаю / Прочитал
+- лайк на книжке
+- Простой список без излишеств
+
+#### Авторизация
+
+- Email + пароль
+
