@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   
   devtools: { enabled: true },
 
+  runtimeConfig: {
+    booksApiKey: process.env.BOOKS_API_KEY || '',
+  },
+
   srcDir: 'app/',
 
   modules: ['@nuxtjs/supabase'],

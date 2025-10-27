@@ -88,3 +88,81 @@ https://gamma.app/docs/ReadMind-AI-1kfhtt5qwr3w7b9
 3) ручка для получения информации профиля
 4) ручка для редактирования профиля
 5) сервис онбординга
+
+## Deployment on Ubuntu Server
+
+### Prerequisites
+- Node.js 18+ installed
+- PM2 installed globally: `npm install -g pm2`
+- Caddy web server (for reverse proxy)
+
+### Deployment Steps
+
+1. **Clone the repository**
+```bash
+git clone <your-repo-url>
+cd enterprise-javascript-startup
+```
+
+2. **Install dependencies**
+```bash
+npm install
+# or
+yarn install
+```
+
+3. **Set up environment variables**
+```bash
+cp .env.example .env
+nano .env
+# Add your actual values:
+# SUPABASE_URL=your_supabase_url
+# SUPABASE_KEY=your_supabase_anon_key
+# BOOKS_API_KEY=your_google_books_api_key
+```
+
+4. **Build the application**
+```bash
+npm run build
+# or
+yarn build
+```
+
+5. **Start with PM2**
+```bash
+pm2 start ecosystem.config.cjs
+pm2 save
+pm2 startup  # Follow the instructions to enable auto-start on reboot
+```
+
+6. **Configure Caddy** (if using domain)
+```bash
+sudo nano /etc/caddy/Caddyfile
+```
+
+Add your domain configuration:
+```
+your-domain.com {
+    reverse_proxy 127.0.0.1:8742
+}
+```
+
+Then reload Caddy:
+```bash
+sudo caddy fmt --overwrite /etc/caddy/Caddyfile
+sudo systemctl reload caddy
+```
+
+### Managing the Application
+
+- **View logs**: `pm2 logs readmind`
+- **Restart app**: `pm2 restart readmind`
+- **Stop app**: `pm2 stop readmind`
+- **Monitor**: `pm2 monit`
+- **Update deployment**:
+  ```bash
+  git pull
+  npm install
+  npm run build
+  pm2 restart readmind
+  ```

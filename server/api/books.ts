@@ -20,8 +20,9 @@ export default defineEventHandler(async (event): Promise<BooksApiResponse> => {
       maxResults: query.maxResults,
     });
 
-    // Получаем API ключ из окружения
-    const apiKey = process.env.BOOKS_API_KEY;
+    // Получаем API ключ из runtime config
+    const config = useRuntimeConfig();
+    const apiKey = config.booksApiKey;
 
     if (!apiKey) {
       throw createError({
