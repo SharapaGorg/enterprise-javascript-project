@@ -33,13 +33,10 @@ export default defineNuxtConfig({
   // Оптимизация для production
   nitro: {
     compressPublicAssets: true,
-    preset: 'static',
     output: {
-      publicDir: 'dist'
+      dir: 'dist'
     }
   },
-
-  ssr: false, // Включить SPA режим для статического хостинга
 
   // TypeScript строгие проверки
   typescript: {
