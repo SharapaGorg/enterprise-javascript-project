@@ -35,8 +35,11 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
     output: {
       dir: 'dist'
-    }
+    },
+    preset: 'static'
   },
+
+  ssr: false, // Включить SPA режим для статического хостинга
 
   // TypeScript строгие проверки
   typescript: {
