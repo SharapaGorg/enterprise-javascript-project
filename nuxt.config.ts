@@ -33,6 +33,9 @@ export default defineNuxtConfig({
   // Оптимизация для production
   nitro: {
     compressPublicAssets: true,
+    output: {
+      dir: 'dist'
+    }
   },
 
   // TypeScript строгие проверки
