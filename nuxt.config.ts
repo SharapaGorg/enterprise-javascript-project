@@ -13,10 +13,13 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/supabase'],
 
   supabase: {
+    url: process.env.SUPABASE_URL,
+    key: process.env.SUPABASE_KEY,
     redirect: false,
   },
 
   app: {
+    baseURL: '/read-mind-ai/',
     head: {
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
