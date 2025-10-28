@@ -34,7 +34,8 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     output: {
-      dir: 'dist'
+      dir: 'dist',
+      publicDir: 'dist'
     },
     preset: 'static'
   },

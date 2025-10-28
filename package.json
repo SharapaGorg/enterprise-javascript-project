@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
-    "build:prod": "nuxt prepare && nuxt generate",
+    "build:prod": "nuxt prepare && nuxt generate && mv dist/public/* dist/ && rm -rf dist/public dist/nitro.json",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
