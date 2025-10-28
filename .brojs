@@ -2,10 +2,11 @@
   "name": "read-mind-ai",
   "type": "nuxt",
   "buildCommand": "yarn build",
-  "installCommand": "yarn install",
+  "installCommand": "./install.sh",
   "outputDirectory": ".output",
   "nodeVersion": "20",
   "basePath": "/read-mind-ai",
+  "packageManager": "yarn",
   "environment": {
     "NODE_ENV": "production"
   }
