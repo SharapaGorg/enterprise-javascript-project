@@ -94,3 +94,6 @@ if (fs.existsSync(indexHtml)) {
 }
 
 console.log('✓ Build complete! Files copied to dist/');
+
+// Fix all path references
+import('./fix-build-paths.js');
