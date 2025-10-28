@@ -46,7 +46,7 @@ pipeline {
 
                 stage('build') {
                     steps {
-                        sh 'yarn build:brojs'
+                        sh 'yarn build:prod'
                     }
                 }
             }
