@@ -1,16 +1,16 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
-  
+
   devtools: { enabled: true },
 
   runtimeConfig: {
-    booksApiKey: process.env.BOOKS_API_KEY || '',
+    booksApiKey: process.env.BOOKS_API_KEY || "",
   },
 
-  srcDir: 'app/',
+  srcDir: "app/",
 
-  modules: ['@nuxtjs/supabase'],
+  modules: ["@nuxtjs/supabase"],
 
   supabase: {
     url: process.env.SUPABASE_URL,
@@ -19,31 +19,79 @@ export default defineNuxtConfig({
   },
 
   app: {
-    baseURL: '/read-mind-ai/',
+    baseURL: "/",
     head: {
-      charset: 'utf-8',
-      viewport: 'width=device-width, initial-scale=1',
-      title: 'ReadMind AI - Персональный литературный ассистент',
+      charset: "utf-8",
+      viewport: "width=device-width, initial-scale=1",
+      title: "ReadMind AI - Персональный литературный ассистент",
       meta: [
-        { name: 'description', content: 'AI-powered платформа для персонализированных книжных рекомендаций' },
+        {
+          name: "description",
+          content:
+            "AI-powered платформа для персонализированных книжных рекомендаций",
+        },
       ],
     },
   },
 
   // Оптимизация для production
+  // nitro: {
+  //   compressPublicAssets: true,
+  //   // preset: 'static',
+  //   preset: "node-server",
+  //   output: {
+  //     publicDir: "dist",
+  //   },
+  // },
   nitro: {
-    compressPublicAssets: true,
     preset: 'static',
     output: {
-      publicDir: 'dist'
-    }
+      dir: '.output',
+      publicDir: '.output/public'
+    },
+    prerender: {
+      routes: ['/']
+    },
+    publicAssets: [
+      {
+        baseURL: '/',
+        dir: '.nuxt/dist/client'
+      }
+    ]
   },
 
-  ssr: false, // Включить SPA режим для статического хостинга
+  ssr: false, // SPA mode for static hosting
 
-  // TypeScript строгие проверки
+  // TypeScript settings
   typescript: {
     strict: true,
-    typeCheck: false, // Отключаем type-check при каждой сборке для скорости
+    typeCheck: false,
+  },
+
+  // Generate settings
+  generate: {
+    dir: 'dist'
+  },
+
+  // Build configuration
+  build: {
+    analyze: false,
+  },
+
+  vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          entryFileNames: 'index.js',
+          chunkFileNames: '[name]-[hash].js',
+          assetFileNames: (assetInfo) => {
+            if (assetInfo.name?.endsWith('.css')) {
+              return 'styles/[name]-[hash][extname]'
+            }
+            return 'assets/[name]-[hash][extname]'
+          }
+        }
+      }
+    }
   },
 });
