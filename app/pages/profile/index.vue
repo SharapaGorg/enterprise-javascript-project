@@ -13,14 +13,14 @@
 
       <div v-else-if="error" class="error-card">
         <h2>Ошибка</h2>
-        <p>{{ error.message || 'Не удалось загрузить профиль' }}</p>
+        <p>{{ error.message || "Не удалось загрузить профиль" }}</p>
       </div>
 
       <div v-else-if="profileData" class="profile-content">
         <!-- Карточка пользователя -->
         <div class="user-card">
           <div class="avatar">
-            {{ profileData.email?.[0]?.toUpperCase() || '?' }}
+            {{ profileData.email?.[0]?.toUpperCase() || "?" }}
           </div>
           <div class="user-info">
             <h2>{{ profileData.full_name || profileData.email }}</h2>
@@ -101,14 +101,16 @@
                   <button
                     type="button"
                     class="btn-add"
-                    :disabled="!newGenre || (formData.favorite_genres?.length || 0) >= 10"
+                    :disabled="
+                      !newGenre || (formData.favorite_genres?.length || 0) >= 10
+                    "
                     @click="addGenre"
                   >
                     Добавить
                   </button>
                 </div>
               </div>
-              
+
               <div class="popular-genres">
                 <small>Популярные:</small>
                 <button
@@ -134,7 +136,7 @@
 
             <div class="form-actions">
               <button type="submit" :disabled="saving" class="btn-primary">
-                {{ saving ? 'Сохранение...' : '💾 Сохранить' }}
+                {{ saving ? "Сохранение..." : "💾 Сохранить" }}
               </button>
               <button type="button" class="btn-secondary" @click="cancelEdit">
                 Отмена
@@ -148,13 +150,17 @@
           <div class="info-section">
             <div class="section-header">
               <h3>📝 Основная информация</h3>
-              <button class="btn-edit" @click="startEditing">✏️ Редактировать</button>
+              <button class="btn-edit" @click="startEditing">
+                ✏️ Редактировать
+              </button>
             </div>
 
             <div class="info-grid">
               <div class="info-item">
                 <span class="label">Полное имя:</span>
-                <span class="value">{{ profileData.full_name || 'Не указано' }}</span>
+                <span class="value">{{
+                  profileData.full_name || "Не указано"
+                }}</span>
               </div>
               <div class="info-item">
                 <span class="label">Email:</span>
@@ -169,7 +175,7 @@
 
           <div class="info-section">
             <h3>📚 Настройки чтения</h3>
-            
+
             <div class="info-grid">
               <div class="info-item">
                 <span class="label">Цель на год:</span>
@@ -179,7 +185,13 @@
               </div>
             </div>
 
-            <div v-if="profileData.favorite_genres && profileData.favorite_genres.length > 0" class="genres-display">
+            <div
+              v-if="
+                profileData.favorite_genres &&
+                profileData.favorite_genres.length > 0
+              "
+              class="genres-display"
+            >
               <span class="label">Любимые жанры:</span>
               <div class="genre-list">
                 <span
@@ -202,7 +214,9 @@
               <NuxtLink to="/books" class="action-item">
                 📚 Поиск книг
               </NuxtLink>
-              <div class="action-item disabled">📝 Пройти онбординг (скоро)</div>
+              <NuxtLink to="/profile/onboarding" class="action-item"
+                >📝 Пройти онбординг</NuxtLink
+              >
               <div class="action-item disabled">📖 Мои книги (скоро)</div>
             </div>
           </div>
@@ -214,7 +228,7 @@
 
 <script setup lang="ts">
 definePageMeta({
-  middleware: 'auth',
+  middleware: "auth",
 });
 
 const { logout } = useAuth();
@@ -222,10 +236,10 @@ const { fetchProfile, updateProfile } = useProfile();
 
 // SEO
 useHead({
-  title: 'Профиль - ReadMind AI',
+  title: "Профиль - ReadMind AI",
   meta: [
-    { name: 'description', content: 'Ваш профиль в ReadMind AI' },
-    { name: 'robots', content: 'noindex, nofollow' },
+    { name: "description", content: "Ваш профиль в ReadMind AI" },
+    { name: "robots", content: "noindex, nofollow" },
   ],
 });
 
@@ -236,28 +250,28 @@ const profileData = computed(() => profile.value?.profile);
 // Состояние редактирования
 const isEditing = ref(false);
 const saving = ref(false);
-const saveError = ref('');
-const successMessage = ref('');
+const saveError = ref("");
+const successMessage = ref("");
 
 // Форма
 const formData = ref({
-  full_name: '',
-  bio: '',
+  full_name: "",
+  bio: "",
   reading_goal: 0,
   favorite_genres: [] as string[],
 });
 
-const newGenre = ref('');
+const newGenre = ref("");
 
 const popularGenres = [
-  'Фантастика',
-  'Детективы',
-  'Триллеры',
-  'Романы',
-  'Фэнтези',
-  'Классика',
-  'Бизнес',
-  'Психология',
+  "Фантастика",
+  "Детективы",
+  "Триллеры",
+  "Романы",
+  "Фэнтези",
+  "Классика",
+  "Бизнес",
+  "Психология",
 ];
 
 // Методы
@@ -265,16 +279,16 @@ const handleLogout = async () => {
   try {
     await logout();
   } catch (err) {
-    console.error('Ошибка при выходе:', err);
+    console.error("Ошибка при выходе:", err);
   }
 };
 
 const formatDate = (date: string | null) => {
-  if (!date) return 'Н/Д';
-  return new Date(date).toLocaleDateString('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
+  if (!date) return "Н/Д";
+  return new Date(date).toLocaleDateString("ru-RU", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 };
 
@@ -282,45 +296,47 @@ const startEditing = () => {
   // Копируем текущие данные в форму
   if (profileData.value) {
     formData.value = {
-      full_name: profileData.value.full_name || '',
-      bio: profileData.value.bio || '',
+      full_name: profileData.value.full_name || "",
+      bio: profileData.value.bio || "",
       reading_goal: profileData.value.reading_goal || 0,
-      favorite_genres: profileData.value.favorite_genres ? [...profileData.value.favorite_genres] : [],
+      favorite_genres: profileData.value.favorite_genres
+        ? [...profileData.value.favorite_genres]
+        : [],
     };
   }
   isEditing.value = true;
-  saveError.value = '';
-  successMessage.value = '';
+  saveError.value = "";
+  successMessage.value = "";
 };
 
 const cancelEdit = () => {
   isEditing.value = false;
-  saveError.value = '';
-  successMessage.value = '';
-  newGenre.value = '';
+  saveError.value = "";
+  successMessage.value = "";
+  newGenre.value = "";
 };
 
 const addGenre = () => {
   const genre = newGenre.value.trim();
   if (!genre) return;
-  
+
   if (!formData.value.favorite_genres) {
     formData.value.favorite_genres = [];
   }
 
   if (formData.value.favorite_genres.length >= 10) {
-    saveError.value = 'Максимум 10 жанров';
+    saveError.value = "Максимум 10 жанров";
     return;
   }
 
   if (formData.value.favorite_genres.includes(genre)) {
-    saveError.value = 'Этот жанр уже добавлен';
+    saveError.value = "Этот жанр уже добавлен";
     return;
   }
 
   formData.value.favorite_genres.push(genre);
-  newGenre.value = '';
-  saveError.value = '';
+  newGenre.value = "";
+  saveError.value = "";
 };
 
 const addGenreSuggestion = (genre: string) => {
@@ -330,12 +346,12 @@ const addGenreSuggestion = (genre: string) => {
 
   if (formData.value.favorite_genres.includes(genre)) return;
   if (formData.value.favorite_genres.length >= 10) {
-    saveError.value = 'Максимум 10 жанров';
+    saveError.value = "Максимум 10 жанров";
     return;
   }
 
   formData.value.favorite_genres.push(genre);
-  saveError.value = '';
+  saveError.value = "";
 };
 
 const removeGenre = (index: number) => {
@@ -345,24 +361,25 @@ const removeGenre = (index: number) => {
 const handleSave = async () => {
   try {
     saving.value = true;
-    saveError.value = '';
-    successMessage.value = '';
+    saveError.value = "";
+    successMessage.value = "";
 
     await updateProfile(formData.value);
 
-    successMessage.value = 'Профиль успешно обновлен!';
-    
+    successMessage.value = "Профиль успешно обновлен!";
+
     // Обновляем данные
     await refresh();
 
     // Через 1.5 сек возвращаемся в режим просмотра
     setTimeout(() => {
       isEditing.value = false;
-      successMessage.value = '';
+      successMessage.value = "";
     }, 1500);
   } catch (err: any) {
-    console.error('Ошибка при сохранении:', err);
-    saveError.value = err.data?.statusMessage || 'Произошла ошибка при сохранении';
+    console.error("Ошибка при сохранении:", err);
+    saveError.value =
+      err.data?.statusMessage || "Произошла ошибка при сохранении";
   } finally {
     saving.value = false;
   }
@@ -429,7 +446,9 @@ const handleSave = async () => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .error-card h2 {
