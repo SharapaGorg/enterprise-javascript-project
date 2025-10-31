@@ -1,14 +1,11 @@
 {
-  "name": "read-mind-ai",
+  "name": "nuxt-app",
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt generate && node scripts/build-for-brojs.js",
-    "build:brojs": "nuxt generate && node scripts/build-for-brojs.js",
-    "build:prod": "nuxt prepare && nuxt generate && node scripts/build-for-brojs.js",
-    "build:test": "NUXT_CONFIG=nuxt.config.build.ts nuxi prepare && vite build --config .nuxt/vite.config.ts\n",
+    "build": "nuxt build",
     "dev": "nuxt dev",
-    "generate": "nuxt generate && node scripts/organize-dist.js",
+    "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "test": "vitest",
@@ -20,14 +17,13 @@
     "format:check": "prettier . --check"
   },
   "dependencies": {
-    "@nuxtjs/supabase": "^1.4.0",
-    "nuxt": "^3.13.2",
+    "@nuxtjs/supabase": "^2.0.1",
+    "nuxt": "^4.1.2",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1"
   },
   "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
   "devDependencies": {
-    "@brojs/cli": "^1.9.5",
     "@eslint/js": "^9.38.0",
     "@types/node": "^22.10.5",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
@@ -45,6 +41,5 @@
     "typescript-eslint": "^8.46.2",
     "vitest": "^3.2.4",
     "vue-eslint-parser": "^9"
-  },
-  "version": "1.0.3"
+  }
 }

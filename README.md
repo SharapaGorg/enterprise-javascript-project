@@ -12,25 +12,6 @@ Run tests:
 
 `yarn test`
 
-## BroJS Deployment
-
-This project is configured for deployment to BroJS platform at admin.brojs.ru.
-
-### Setup
-
-1. Project is already created on admin.brojs.ru with name `read-mind-ai`
-2. GitHub repository is linked in the BroJS admin panel
-3. Deployments are triggered automatically through the BroJS platform when pushing to the connected branch
-
-### Build Configuration
-
-BroJS will automatically:
-- Install dependencies using `yarn install`
-- Build the project using `yarn build`
-- Deploy the Nuxt output from `.output` directory
-
-Make sure your production environment variables are configured in the BroJS admin panel.
-
 # Презентация
 
 https://gamma.app/docs/ReadMind-AI-1kfhtt5qwr3w7b9
