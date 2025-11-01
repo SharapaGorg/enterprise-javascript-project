@@ -2,8 +2,8 @@
   <section class="onboarding-page">
     <div class="container">
       <header class="page-header">
-        <h1 class="page-header">Онбординг</h1>
-        <NuxtLink to="/profile" class="btn btn--ghost">В профиль</NuxtLink>
+        <h1>Онбординг</h1>
+        <p class="header-subtitle">Помогите нам узнать о ваших предпочтениях в чтении</p>
       </header>
       <OnboardingProgress :current="current" :total="steps.length" />
 
@@ -12,56 +12,18 @@
           <label class="qa__q">{{ step.question }}</label>
 
           <div class="qa__a">
-            <template v-if="step.type === 'select'">
-              <select
-                class="input"
-                :value="answers[step.id] ?? ''"
-                @change="
-                  setAnswer(
-                    step.id,
-                    ($event.target as HTMLSelectElement).value || null,
-                  )
-                "
-              >
-                <option value="" disabled>Выберите вариант…</option>
-                <option v-for="opt in step.options" :key="opt" :value="opt">
-                  {{ opt }}
-                </option>
-              </select>
-            </template>
-
-            <template v-else-if="step.type === 'bool'">
-              <div class="choice-row">
-                <button
-                  class="btn"
-                  :class="{ 'btn--active': answers[step.id] === true }"
-                  @click="setAnswer(step.id, true)"
-                >
-                  Да
-                </button>
-                <button
-                  class="btn"
-                  :class="{ 'btn--active': answers[step.id] === false }"
-                  @click="setAnswer(step.id, false)"
-                >
-                  Нет
-                </button>
-              </div>
-            </template>
-
-            <template v-else>
-              <textarea
-                class="input"
-                rows="4"
-                :value="(answers[step.id] as string) ?? ''"
-                @input="
-                  setAnswer(
-                    step.id,
-                    ($event.target as HTMLTextAreaElement).value,
-                  )
-                "
-              />
-            </template>
+            <textarea
+              class="input"
+              rows="6"
+              :value="(answers[step.id] as string) ?? ''"
+              @input="
+                setAnswer(
+                  step.id,
+                  ($event.target as HTMLTextAreaElement).value,
+                )
+              "
+              :placeholder="`Введите ваш ответ на вопрос: ${step.question}`"
+            />
           </div>
         </div>
       </main>
@@ -101,14 +63,16 @@ import { useOnboarding } from "@/composables/useOnboarding";
 import OnboardingProgress from "@/components/OnboardingProgress.vue";
 import { navigateTo } from "#app";
 
+definePageMeta({
+  middleware: "auth",
+});
+
 const { steps, current, answers, setAnswer, next, back, finish } =
   useOnboarding();
 const step = computed(() => steps.value[current.value]);
 
 const canContinue = computed(() => {
   const v = answers.value[step.value.id];
-  if (step.value.type === "select") return !!v;
-  if (step.value.type === "bool") return typeof v === "boolean";
   return typeof v === "string" && v.trim().length > 0;
 });
 
@@ -139,7 +103,14 @@ async function handleFinish() {
 
 .page-header h1 {
   font-size: 36px;
+  margin: 0 0 8px 0;
+}
+
+.header-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
   margin: 0;
+  text-align: center;
 }
 
 .onboarding-content {
@@ -190,11 +161,6 @@ select option:hover {
   margin-bottom: 10px;
 }
 
-.choice-row {
-  display: flex;
-  gap: 8px;
-}
-
 .btn {
   padding: 8px 16px;
   background: #f7fafc;
@@ -220,13 +186,6 @@ select option:hover {
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 2px solid white;
-}
-.btn--active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  font-size: 14px;
-  font-weight: 600;
-  border-style: none;
 }
 a {
   text-decoration: none;

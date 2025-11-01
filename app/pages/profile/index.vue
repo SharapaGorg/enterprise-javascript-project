@@ -214,9 +214,9 @@
               <NuxtLink to="/books" class="action-item">
                 📚 Поиск книг
               </NuxtLink>
-              <NuxtLink to="/profile/onboarding" class="action-item"
-                >📝 Пройти онбординг</NuxtLink
-              >
+              <NuxtLink to="/profile/onboarding" class="action-item">
+                📝 Пройти онбординг
+              </NuxtLink>
               <div class="action-item disabled">📖 Мои книги (скоро)</div>
             </div>
           </div>
