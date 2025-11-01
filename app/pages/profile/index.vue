@@ -214,6 +214,9 @@
               <NuxtLink to="/books" class="action-item">
                 📚 Поиск книг
               </NuxtLink>
+              <NuxtLink to="/chat" class="action-item">
+                🤖 Чат с ИИ
+              </NuxtLink>
               <NuxtLink to="/profile/onboarding" class="action-item">
                 📝 Пройти онбординг
               </NuxtLink>
