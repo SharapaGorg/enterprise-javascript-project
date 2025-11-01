@@ -3,8 +3,34 @@ interface ChatMessage {
   content: string;
 }
 
+interface ChatSettings {
+  model: string;
+  temperature: number;
+  maxTokens: number;
+  includeOnboarding?: boolean;
+  includeProfile?: boolean;
+  customContext?: string;
+}
+
+interface ContextData {
+  onboardingAnswers?: Record<string, any>;
+  profileData?: {
+    full_name?: string;
+    favorite_genres?: string[];
+    reading_goal?: number;
+    bio?: string;
+  };
+  literaryFilters?: {
+    genres?: string[];
+    type?: string;
+    era?: string;
+  };
+}
+
 interface ChatRequest {
   messages: ChatMessage[];
+  settings?: ChatSettings;
+  contextData?: ContextData;
 }
 
 interface OpenRouterResponse {
@@ -58,10 +84,110 @@ export default defineEventHandler(async (event): Promise<{ message: string; usag
       });
     }
 
-    // Подготавливаем системный промпт для литературного ассистента
+    // Получаем настройки или используем значения по умолчанию
+    const settings = body.settings || {
+      model: 'deepseek/deepseek-chat',
+      temperature: 0.7,
+      maxTokens: 2000,
+      includeOnboarding: true,
+      includeProfile: true,
+      customContext: '',
+    };
+
+    // Формируем системный промпт с контекстом
+    let systemPrompt = 'Ты - персональный литературный ассистент ReadMind AI. Помогай пользователям с вопросами о книгах, рекомендациями, обсуждением литературных произведений. Будь дружелюбным, знающим и полезным.\n\n';
+
+    // Добавляем контекст из онбординга
+    if (settings.includeOnboarding && body.contextData?.onboardingAnswers) {
+      const answers = body.contextData.onboardingAnswers;
+      const contextParts: string[] = [];
+
+      if (answers.languages) {
+        contextParts.push(`Пользователь читает на языках: ${answers.languages}`);
+      }
+      if (answers.readingPurpose) {
+        contextParts.push(`Цель чтения: ${answers.readingPurpose}`);
+      }
+      if (answers.bookPreference) {
+        contextParts.push(`Предпочтения в книгах: ${answers.bookPreference}`);
+      }
+      if (answers.favoriteBooks) {
+        contextParts.push(`Любимые книги и авторы: ${answers.favoriteBooks}`);
+      }
+      if (answers.readingFrequency) {
+        contextParts.push(`Частота чтения: ${answers.readingFrequency}`);
+      }
+
+      if (contextParts.length > 0) {
+        systemPrompt += 'Контекст о пользователе из онбординга:\n';
+        contextParts.forEach(part => {
+          systemPrompt += `- ${part}\n`;
+        });
+        systemPrompt += '\n';
+      }
+    }
+
+    // Добавляем контекст из профиля
+    if (settings.includeProfile && body.contextData?.profileData) {
+      const profile = body.contextData.profileData;
+      const profileParts: string[] = [];
+
+      if (profile.full_name) {
+        profileParts.push(`Имя: ${profile.full_name}`);
+      }
+      if (profile.favorite_genres && profile.favorite_genres.length > 0) {
+        profileParts.push(`Любимые жанры: ${profile.favorite_genres.join(', ')}`);
+      }
+      if (profile.reading_goal) {
+        profileParts.push(`Цель чтения: ${profile.reading_goal} книг в год`);
+      }
+      if (profile.bio) {
+        profileParts.push(`О пользователе: ${profile.bio}`);
+      }
+
+      if (profileParts.length > 0) {
+        systemPrompt += 'Информация из профиля пользователя:\n';
+        profileParts.forEach(part => {
+          systemPrompt += `- ${part}\n`;
+        });
+        systemPrompt += '\n';
+      }
+    }
+
+    // Добавляем тематические фильтры
+    if (body.contextData?.literaryFilters) {
+      const filters = body.contextData.literaryFilters;
+      const filterParts: string[] = [];
+
+      if (filters.genres && filters.genres.length > 0) {
+        filterParts.push(`Интересует пользователя: ${filters.genres.join(', ')}`);
+      }
+      if (filters.type) {
+        filterParts.push(`Тип литературы: ${filters.type}`);
+      }
+      if (filters.era) {
+        filterParts.push(`Эпоха/Стиль: ${filters.era}`);
+      }
+
+      if (filterParts.length > 0) {
+        systemPrompt += 'Тематические предпочтения пользователя:\n';
+        filterParts.forEach(part => {
+          systemPrompt += `- ${part}\n`;
+        });
+        systemPrompt += '\n';
+      }
+    }
+
+    // Добавляем кастомный контекст
+    if (settings.customContext?.trim()) {
+      systemPrompt += `Дополнительный контекст:\n${settings.customContext.trim()}\n\n`;
+    }
+
+    systemPrompt += 'Используй всю эту информацию для персонализации рекомендаций и ответов.';
+
     const systemMessage: ChatMessage = {
       role: 'system',
-      content: 'Ты - персональный литературный ассистент ReadMind AI. Помогай пользователям с вопросами о книгах, рекомендациями, обсуждением литературных произведений. Будь дружелюбным, знающим и полезным.',
+      content: systemPrompt,
     };
 
     // Добавляем системное сообщение в начало, если его нет
@@ -81,10 +207,10 @@ export default defineEventHandler(async (event): Promise<{ message: string; usag
           'X-Title': config.public.siteName,
         },
         body: {
-          model: 'deepseek/deepseek-chat',
+          model: settings.model,
           messages: messages,
-          temperature: 0.7,
-          max_tokens: 2000,
+          temperature: settings.temperature,
+          max_tokens: settings.maxTokens,
         },
       }
     );

@@ -1,13 +1,43 @@
 <template>
   <div class="chat-page">
     <div class="chat-container">
-      <header class="chat-header">
-        <h1>🤖 Чат с ИИ</h1>
-        <p class="chat-subtitle">Задайте вопрос о книгах, получите рекомендации или обсудите литературу</p>
-        <button v-if="messages.length > 0" class="btn-clear" @click="handleClear">🗑️ Очистить чат</button>
-      </header>
+      <button
+        v-if="!isChatListOpen"
+        class="btn-open-chat-list"
+        @click="isChatListOpen = true"
+        title="Открыть список чатов"
+      >
+        💬
+      </button>
 
-      <div class="chat-messages" ref="messagesContainer">
+      <div class="chat-list-wrapper" :class="{ 'chat-list-wrapper--hidden': !isChatListOpen }">
+        <ChatList
+          :chats="chats"
+          :current-chat-id="currentChatId"
+          :is-open="isChatListOpen"
+          @switch="handleSwitchChat"
+          @create="handleCreateChat"
+          @delete="handleDeleteChat"
+          @rename="handleRenameChat"
+          @close="isChatListOpen = false"
+        />
+      </div>
+
+      <div class="chat-main">
+        <header class="chat-header">
+          <div class="header-left">
+            <h1>🤖 {{ currentChat?.title || 'Чат с ИИ' }}</h1>
+            <p class="chat-subtitle">Задайте вопрос о книгах, получите рекомендации или обсудите литературу</p>
+          </div>
+          <div class="header-actions">
+            <button v-if="messages.length > 0" class="btn-clear" @click="handleClear">🗑️ Очистить</button>
+            <button class="btn-new-chat-header" @click="handleCreateChat" title="Новый чат">
+              ➕ Новый
+            </button>
+          </div>
+        </header>
+
+        <div class="chat-messages" ref="messagesContainer">
         <div v-if="messages.length === 0" class="welcome-message">
           <div class="welcome-icon">📚</div>
           <h2>Добро пожаловать в чат с ИИ-ассистентом!</h2>
@@ -50,6 +80,58 @@
         </div>
       </div>
 
+      </div>
+
+      <aside class="chat-sidebar">
+        <div class="sidebar-content">
+          <h3 class="sidebar-title">🎯 Тематические фильтры</h3>
+
+          <div class="filter-section">
+            <label class="filter-label">📚 Жанры</label>
+            <div class="filter-tags compact">
+              <button
+                v-for="genre in availableGenres"
+                :key="genre"
+                :class="['filter-tag', { active: selectedGenres.includes(genre) }]"
+                @click="toggleGenre(genre)"
+              >
+                {{ genre }}
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <label class="filter-label">📖 Тип</label>
+            <div class="filter-tags compact">
+              <button
+                v-for="type in availableTypes"
+                :key="type"
+                :class="['filter-tag', { active: selectedType === type }]"
+                @click="selectedType = type"
+              >
+                {{ type }}
+              </button>
+            </div>
+          </div>
+
+          <div class="filter-section">
+            <label class="filter-label">🎭 Эпоха</label>
+            <div class="filter-tags compact">
+              <button
+                v-for="era in availableEras"
+                :key="era"
+                :class="['filter-tag', { active: selectedEra === era }]"
+                @click="selectedEra = era"
+              >
+                {{ era }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="chat-input-wrapper">
       <div v-if="error" class="error-banner">
         <span>❌ {{ error }}</span>
       </div>
@@ -80,8 +162,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { ref, watch, nextTick, computed, onMounted } from 'vue';
 import { useChat } from '@/composables/useChat';
+import { useOnboarding } from '@/composables/useOnboarding';
+import { useProfile } from '@/composables/useProfile';
 
 definePageMeta({
   middleware: 'auth',
@@ -95,15 +179,140 @@ useHead({
   ],
 });
 
-const { messages, isLoading, error, sendMessage, clearChat } = useChat();
+const {
+  chats,
+  currentChatId,
+  currentChat,
+  messages,
+  isLoading,
+  error,
+  settings,
+  sendMessage,
+  createChat,
+  deleteChat,
+  switchChat,
+  renameChat,
+  clearChat,
+  initDefaultChat,
+} = useChat();
+const { answers: onboardingAnswers } = useOnboarding();
+const { fetchProfile } = useProfile();
 const inputMessage = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
+const isChatListOpen = ref(true); // По умолчанию открыт
+
+// Тематические фильтры
+const availableGenres = [
+  'Фантастика',
+  'Фэнтези',
+  'Детектив',
+  'Роман',
+  'Триллер',
+  'Ужасы',
+  'Научпоп',
+  'Биография',
+  'История',
+  'Философия',
+  'Поэзия',
+  'Классика',
+];
+
+const availableTypes = [
+  'Любой',
+  'Художественная',
+  'Научная',
+  'Мемуары',
+  'Эссе',
+];
+
+const availableEras = [
+  'Любая',
+  'Классическая',
+  'Современная',
+  'Авангард',
+  'Постмодерн',
+];
+
+const selectedGenres = ref<string[]>([]);
+const selectedType = ref('Любой');
+const selectedEra = ref('Любая');
+
+// Загружаем профиль для контекста
+const { data: profileData } = fetchProfile();
+
+// Функция для переключения жанра
+function toggleGenre(genre: string) {
+  const index = selectedGenres.value.indexOf(genre);
+  if (index > -1) {
+    selectedGenres.value.splice(index, 1);
+  } else {
+    selectedGenres.value.push(genre);
+  }
+}
+
+// Подготавливаем данные для контекста
+const contextData = computed(() => {
+  const data: {
+    onboardingAnswers?: Record<string, any>;
+    profileData?: any;
+    literaryFilters?: {
+      genres?: string[];
+      type?: string;
+      era?: string;
+    };
+  } = {};
+
+  // Добавляем данные онбординга, если они есть
+  if (settings.value.includeOnboarding && onboardingAnswers.value) {
+    data.onboardingAnswers = { ...onboardingAnswers.value };
+  }
+
+  // Добавляем данные профиля, если они есть
+  if (settings.value.includeProfile && profileData.value?.profile) {
+    data.profileData = {
+      full_name: profileData.value.profile.full_name,
+      favorite_genres: profileData.value.profile.favorite_genres,
+      reading_goal: profileData.value.profile.reading_goal,
+      bio: profileData.value.profile.bio,
+    };
+  }
+
+  // Добавляем тематические фильтры
+  const filters: any = {};
+  if (selectedGenres.value.length > 0) {
+    filters.genres = selectedGenres.value;
+  }
+  if (selectedType.value !== 'Любой') {
+    filters.type = selectedType.value;
+  }
+  if (selectedEra.value !== 'Любая') {
+    filters.era = selectedEra.value;
+  }
+
+  if (Object.keys(filters).length > 0) {
+    data.literaryFilters = filters;
+  }
+
+  return data;
+});
 
 // Автоматическая прокрутка к последнему сообщению
 watch(messages, () => {
   nextTick(() => {
     scrollToBottom();
   });
+});
+
+// Переключаемся на новый чат при его создании
+watch(currentChatId, () => {
+  nextTick(() => {
+    scrollToBottom();
+  });
+});
+
+// Инициализация первого чата при монтировании
+onMounted(() => {
+  initDefaultChat();
 });
 
 watch(isLoading, () => {
@@ -128,13 +337,30 @@ function handleSend() {
   const message = inputMessage.value;
   inputMessage.value = '';
 
-  sendMessage(message);
+  sendMessage(message, contextData.value);
 }
 
 function handleClear() {
-  if (confirm('Вы уверены, что хотите очистить историю чата?')) {
+  if (confirm('Вы уверены, что хотите очистить историю этого чата?')) {
     clearChat();
   }
+}
+
+function handleCreateChat() {
+  const title = prompt('Введите название нового чата (или оставьте пустым):');
+  createChat(title || undefined);
+}
+
+function handleSwitchChat(chatId: string) {
+  switchChat(chatId);
+}
+
+function handleDeleteChat(chatId: string) {
+  deleteChat(chatId);
+}
+
+function handleRenameChat(chatId: string, newTitle: string) {
+  renameChat(chatId, newTitle);
 }
 
 function formatMessage(content: string): string {
@@ -161,61 +387,129 @@ function formatTime(date: Date): string {
 }
 
 .chat-container {
-  max-width: 1000px;
+  max-width: 1600px;
   margin: 0 auto;
   height: calc(100vh - 40px);
   display: flex;
-  flex-direction: column;
   background: white;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  overflow: hidden;
-}
-
-.chat-header {
-  padding: 24px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  overflow: visible;
   position: relative;
 }
 
+.chat-list-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  width: 260px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.chat-list-wrapper--hidden {
+  width: 0;
+}
+
+.chat-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chat-header {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 60px;
+}
+
+.header-left {
+  flex: 1;
+  min-width: 0;
+}
+
 .chat-header h1 {
-  margin: 0 0 8px 0;
-  font-size: 28px;
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chat-subtitle {
-  margin: 0;
-  opacity: 0.9;
-  font-size: 14px;
+  display: none; /* Скрываем подзаголовок для экономии места */
 }
 
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.btn-new-chat-header,
 .btn-clear {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  padding: 8px 16px;
+  padding: 6px 12px;
   background: rgba(255, 255, 255, 0.2);
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
+.btn-new-chat-header:hover,
 .btn-clear:hover {
   background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-open-chat-list {
+  position: absolute;
+  left: -50px;
+  top: 16px;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 0 12px 12px 0;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.3s;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn-open-chat-list:hover {
+  transform: translateX(4px);
+  box-shadow: 4px 0 16px rgba(102, 126, 234, 0.4);
 }
 
 .chat-messages {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  padding-bottom: 100px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  overflow-x: hidden;
 }
+
 
 .welcome-message {
   text-align: center;
@@ -382,10 +676,114 @@ function formatTime(date: Date): string {
   font-size: 14px;
 }
 
+.chat-input-wrapper {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1400px;
+  padding: 0 20px 20px 20px;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.chat-input-wrapper > * {
+  pointer-events: auto;
+}
+
 .chat-input-container {
-  padding: 20px 24px;
+  padding: 16px 20px;
   border-top: 1px solid #e2e8f0;
   background: white;
+  border-radius: 12px;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.chat-sidebar {
+  width: 260px;
+  background: #f7fafc;
+  border-left: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  flex-shrink: 0;
+  border-top-right-radius: 16px;
+  border-bottom-left-radius: 16px;
+}
+
+.sidebar-content {
+  padding: 16px;
+}
+
+.sidebar-title {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.filter-section {
+  margin-bottom: 18px;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.filter-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #718096;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.filter-tags.compact .filter-tag {
+  padding: 4px 9px;
+  font-size: 11px;
+}
+
+.filter-tag {
+  padding: 5px 10px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  color: #4a5568;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  line-height: 1.3;
+}
+
+.filter-tag:hover {
+  border-color: #667eea;
+  color: #667eea;
+  background: #f0f4ff;
+}
+
+.filter-tag.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: white;
+}
+
+.filter-tag.active:hover {
+  background: linear-gradient(135deg, #5568d3 0%, #6a3d8c 100%);
 }
 
 .chat-form {
@@ -449,6 +847,61 @@ function formatTime(date: Date): string {
   .chat-container {
     height: 100vh;
     border-radius: 0;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .btn-open-chat-list {
+    left: 10px;
+    top: 10px;
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  .btn-open-chat-list:hover {
+    transform: none;
+  }
+
+  .chat-main {
+    flex: 1;
+    overflow: hidden;
+    order: 2;
+  }
+
+  :deep(.chat-list-sidebar) {
+    width: 100%;
+    max-height: 200px;
+    position: relative;
+    border-right: none;
+    border-bottom: 1px solid #e2e8f0;
+    order: 1;
+  }
+
+  .chat-sidebar {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    position: relative;
+    border-left: none;
+    border-top: 1px solid #e2e8f0;
+    order: 3;
+  }
+
+  .chat-input-wrapper {
+    position: relative;
+    transform: none;
+    left: 0;
+    padding: 0;
+    width: 100%;
+    order: 3;
+  }
+
+  .chat-input-container {
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .chat-header {
@@ -474,6 +927,7 @@ function formatTime(date: Date): string {
   .chat-messages {
     padding: 16px;
   }
+
 
   .message-content {
     max-width: 85%;
