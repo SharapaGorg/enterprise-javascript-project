@@ -221,6 +221,37 @@
                 📝 Пройти онбординг
               </NuxtLink>
               <div class="action-item disabled">📖 Мои книги (скоро)</div>
+              <NuxtLink to="/profile/onboarding" class="action-item"
+                >📝 Пройти онбординг</NuxtLink>
+            </div>
+          </div>
+
+          <div class="books-section">
+            <h3>📖 Мои книги</h3>
+            <!-- Tabs -->
+            <div class="tabs-wrap" role="tablist" aria-label="Категории книг">
+              <button
+                v-for="tab in bookTabs"
+                :key="tab.key"
+                class="tab"
+                :class="{ 'tab--active': activeBookTab === tab.key }"
+                :data-key="tab.key"
+                role="tab"
+                :aria-selected="activeBookTab === tab.key"
+                :tabindex="activeBookTab === tab.key ? 0 : -1"
+                @click="activeBookTab = tab.key"
+              >
+                <span class="tab__label">{{ tab.label }}</span>
+              </button>
+            </div>
+            <!-- Панель содержимого -->
+            <div class="tab-panel" role="tabpanel">
+              <div class="empty-state">
+                <h4 class="empty-title">{{ currentTabTitle }}</h4>
+                <p class="empty-text">
+                  Здесь будут книги из категории «{{ currentTabTitle }}».
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -276,6 +307,29 @@ const popularGenres = [
   "Бизнес",
   "Психология",
 ];
+
+type BookTabKey =
+  | "reading"
+  | "planned"
+  | "finished"
+  | "shelved"
+  | "dropped"
+  | "favourite";
+
+const bookTabs: { key: BookTabKey; label: string }[] = [
+  { key: "reading",   label: "📖 Читаю" },
+  { key: "planned",   label: "📝 В планах" },
+  { key: "finished",  label: "✅ Прочитано" },
+  { key: "shelved",   label: "⏸️ Отложено" },
+  { key: "dropped",   label: "❌ Брошено" },
+  { key: "favourite", label: "💖 Любимые" },
+];
+
+const activeBookTab = ref<BookTabKey>("reading");
+
+const currentTabTitle = computed(() => {
+  return bookTabs.find(t => t.key === activeBookTab.value)?.label ?? "Категория";
+});
 
 // Методы
 const handleLogout = async () => {
@@ -527,7 +581,8 @@ const handleSave = async () => {
 }
 
 .info-section h3,
-.actions-section h3 {
+.actions-section h3,
+.books-section h3 {
   margin: 0 0 20px 0;
   font-size: 20px;
   font-weight: 700;
@@ -821,6 +876,9 @@ const handleSave = async () => {
 
 .actions-section {
   margin-top: 32px;
+  margin-bottom: 32px;
+  padding-bottom: 32px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .action-list {
@@ -888,6 +946,139 @@ const handleSave = async () => {
   .btn-primary,
   .btn-secondary {
     width: 100%;
+  }
+}
+/* Книги */
+.books-section {
+  margin-top: 24px;
+  font: inherit;
+}
+
+.books-section .tabs-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.books-section .tab {
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  border: none;
+  border-right: 1px solid #e2e8f0;
+  background: #e9edf7;
+  color: #2d3748;
+  font: inherit;
+  font-weight: 700;
+  padding: 12px 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.18s ease;
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
+}
+
+.books-section .tab:last-child {
+  border-right: none;
+}
+
+.books-section .tab:hover {
+  background: #dde3f6;
+}
+
+.books-section .tab--active,
+.books-section .tab--active:hover {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  z-index: 2;
+  position: relative;
+}
+
+.books-section .tab--active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 2px;
+  background: #ffffff;
+}
+
+.books-section .tab:focus-visible {
+  outline: 3px solid #667eea;
+  outline-offset: -3px;
+}
+
+.books-section .tab__label {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.books-section .tab-panel {
+  border: 2px solid #e2e8f0;
+  border-top: none;
+  border-radius: 0 0 12px 12px;
+  padding: 24px;
+  background: #ffffff;
+
+  transition: opacity 0.15s ease;
+}
+
+.books-section .empty-state {
+  text-align: center;
+  color: #4a5568;
+}
+
+.books-section .empty-emoji {
+  font-size: 40px;
+  margin-bottom: 8px;
+}
+
+.books-section .empty-title {
+  margin: 0 0 6px 0;
+  font-size: 20px;
+  color: #1a202c;
+  font-weight: 700;
+}
+
+.books-section .empty-text {
+  margin: 0 0 16px 0;
+}
+
+.books-section .chips {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.books-section .chip {
+  padding: 6px 12px;
+  background: #edf2f7;
+  border: 2px solid #e2e8f0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5568;
+  font: inherit;
+}
+
+@media (max-width: 768px) {
+  .books-section .tab {
+    padding: 10px 6px;
+    font-size: 14px;
+  }
+  .books-section .tab-panel {
+    padding: 16px;
   }
 }
 </style>
