@@ -3,15 +3,6 @@ interface ChatMessage {
   content: string;
 }
 
-interface ChatSettings {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  includeOnboarding?: boolean;
-  includeProfile?: boolean;
-  customContext?: string;
-}
-
 interface ContextData {
   onboardingAnswers?: Record<string, any>;
   profileData?: {
@@ -29,7 +20,6 @@ interface ContextData {
 
 interface ChatRequest {
   messages: ChatMessage[];
-  settings?: ChatSettings;
   contextData?: ContextData;
 }
 
@@ -84,21 +74,28 @@ export default defineEventHandler(async (event): Promise<{ message: string; usag
       });
     }
 
-    // Получаем настройки или используем значения по умолчанию
-    const settings = body.settings || {
-      model: 'deepseek/deepseek-chat',
-      temperature: 0.7,
-      maxTokens: 2000,
-      includeOnboarding: true,
-      includeProfile: true,
-      customContext: '',
-    };
+    // Фиксированные настройки (без возможности изменения)
+    const model = 'tngtech/deepseek-r1t2-chimera:free';
+    const temperature = 0.7;
+    const maxTokens = 2000;
+    const includeOnboarding = true;
+    const includeProfile = true;
 
     // Формируем системный промпт с контекстом
     let systemPrompt = 'Ты - персональный литературный ассистент ReadMind AI. Помогай пользователям с вопросами о книгах, рекомендациями, обсуждением литературных произведений. Будь дружелюбным, знающим и полезным.\n\n';
+    
+    // Важное правило для рекомендаций книг
+    systemPrompt += 'ВАЖНО: Когда ты рекомендуешь книги пользователю, в конце твоего ответа ОБЯЗАТЕЛЬНО добавь блок с рекомендациями в следующем формате:\n\n';
+    systemPrompt += '---BOOKS_START---\n';
+    systemPrompt += '[\n';
+    systemPrompt += '  {"title": "Название книги", "author": "Имя Автора"},\n';
+    systemPrompt += '  {"title": "Другая книга", "author": "Другой Автор"}\n';
+    systemPrompt += ']\n';
+    systemPrompt += '---BOOKS_END---\n\n';
+    systemPrompt += 'Используй этот формат ТОЛЬКО когда рекомендуешь конкретные книги. Если в ответе нет рекомендаций книг, не добавляй этот блок.\n\n';
 
     // Добавляем контекст из онбординга
-    if (settings.includeOnboarding && body.contextData?.onboardingAnswers) {
+    if (includeOnboarding && body.contextData?.onboardingAnswers) {
       const answers = body.contextData.onboardingAnswers;
       const contextParts: string[] = [];
 
@@ -128,7 +125,7 @@ export default defineEventHandler(async (event): Promise<{ message: string; usag
     }
 
     // Добавляем контекст из профиля
-    if (settings.includeProfile && body.contextData?.profileData) {
+    if (includeProfile && body.contextData?.profileData) {
       const profile = body.contextData.profileData;
       const profileParts: string[] = [];
 
@@ -178,11 +175,6 @@ export default defineEventHandler(async (event): Promise<{ message: string; usag
       }
     }
 
-    // Добавляем кастомный контекст
-    if (settings.customContext?.trim()) {
-      systemPrompt += `Дополнительный контекст:\n${settings.customContext.trim()}\n\n`;
-    }
-
     systemPrompt += 'Используй всю эту информацию для персонализации рекомендаций и ответов.';
 
     const systemMessage: ChatMessage = {
@@ -207,10 +199,10 @@ export default defineEventHandler(async (event): Promise<{ message: string; usag
           'X-Title': config.public.siteName,
         },
         body: {
-          model: settings.model,
+          model: model,
           messages: messages,
-          temperature: settings.temperature,
-          max_tokens: settings.maxTokens,
+          temperature: temperature,
+          max_tokens: maxTokens,
         },
       }
     );

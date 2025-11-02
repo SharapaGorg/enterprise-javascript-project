@@ -3,7 +3,12 @@
     <div class="container">
       <header class="page-header">
         <h1>👤 Мой профиль</h1>
-        <button class="btn-logout" @click="handleLogout">Выйти</button>
+        <div class="header-actions">
+          <NuxtLink to="/" class="btn-home">
+            🏠 На главную
+          </NuxtLink>
+          <button class="btn-logout" @click="handleLogout">Выйти</button>
+        </div>
       </header>
 
       <div v-if="pending" class="loading">
@@ -28,6 +33,104 @@
             <p class="user-date">
               Дата регистрации: {{ formatDate(profileData.created_at) }}
             </p>
+          </div>
+        </div>
+
+        <!-- Закладки -->
+        <div class="books-section">
+          <h3>📖 Мои книги</h3>
+          <!-- Tabs -->
+          <div class="tabs-wrap" role="tablist" aria-label="Категории книг">
+            <button
+              v-for="tab in bookTabs"
+              :key="tab.key"
+              class="tab"
+              :class="{ 'tab--active': activeBookTab === tab.key }"
+              :data-key="tab.key"
+              role="tab"
+              :aria-selected="activeBookTab === tab.key"
+              :tabindex="activeBookTab === tab.key ? 0 : -1"
+              @click="activeBookTab = tab.key"
+            >
+              <span class="tab__label">{{ tab.label }}</span>
+            </button>
+          </div>
+          <!-- Панель содержимого -->
+          <div class="tab-panel" role="tabpanel">
+            <div v-if="booksForCurrentTab.length === 0" class="empty-state">
+              <h4 class="empty-title">{{ currentTabTitle }}</h4>
+              <p class="empty-text">
+                Здесь будут книги из категории «{{ currentTabTitle }}».
+              </p>
+              <p class="empty-hint">
+                Добавляйте книги в закладки со страницы <NuxtLink to="/books">поиска книг</NuxtLink>.
+              </p>
+            </div>
+            <div v-else class="bookmarks-grid">
+              <div
+                v-for="book in booksForCurrentTab"
+                :key="book.id"
+                class="bookmark-card"
+              >
+                <div class="bookmark-cover">
+                  <img
+                    v-if="book.thumbnail"
+                    :src="book.thumbnail"
+                    :alt="book.title"
+                  />
+                  <div v-else class="no-cover">📖</div>
+                </div>
+                <div class="bookmark-info">
+                  <h4 class="bookmark-title">{{ book.title }}</h4>
+                  <p v-if="book.subtitle" class="bookmark-subtitle">{{ book.subtitle }}</p>
+                  <p class="bookmark-authors">
+                    {{ book.authors.join(', ') || 'Автор неизвестен' }}
+                  </p>
+                  <div v-if="book.rating" class="bookmark-rating">
+                    ⭐ {{ book.rating }} ({{ book.ratingsCount }} отзывов)
+                  </div>
+                  <div class="bookmark-meta">
+                    <span v-if="book.publishedDate" class="meta-item">
+                      📅 {{ book.publishedDate }}
+                    </span>
+                    <span v-if="book.pageCount" class="meta-item">
+                      📄 {{ book.pageCount }} стр.
+                    </span>
+                  </div>
+                  <div class="bookmark-actions">
+                    <select
+                      :value="book.status"
+                      class="status-select"
+                      @change="handleStatusChange(book.id, $event)"
+                    >
+                      <option
+                        v-for="tab in bookTabs"
+                        :key="tab.key"
+                        :value="tab.key"
+                      >
+                        {{ tab.label }}
+                      </option>
+                    </select>
+                    <button
+                      class="btn-remove-bookmark"
+                      @click="handleRemoveBookmark(book.id)"
+                      title="Удалить из закладок"
+                    >
+                      🗑️
+                    </button>
+                    <a
+                      v-if="book.infoLink"
+                      :href="book.infoLink"
+                      target="_blank"
+                      class="btn-book-info"
+                      title="Подробнее"
+                    >
+                      ℹ️
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -146,10 +249,10 @@
         </div>
 
         <!-- Режим просмотра -->
-        <div v-else class="view-section">
+        <div v-else class="view-section" style="margin-top: 40px;">
           <div class="info-section">
             <div class="section-header">
-              <h3>📝 Основная информация</h3>
+              <h3>📋 Профиль и настройки</h3>
               <button class="btn-edit" @click="startEditing">
                 ✏️ Редактировать
               </button>
@@ -170,87 +273,29 @@
                 <span class="label">О себе:</span>
                 <span class="value">{{ profileData.bio }}</span>
               </div>
-            </div>
-          </div>
-
-          <div class="info-section">
-            <h3>📚 Настройки чтения</h3>
-
-            <div class="info-grid">
               <div class="info-item">
                 <span class="label">Цель на год:</span>
                 <span class="value">
                   {{ profileData.reading_goal || 0 }} книг
                 </span>
               </div>
-            </div>
-
-            <div
-              v-if="
-                profileData.favorite_genres &&
-                profileData.favorite_genres.length > 0
-              "
-              class="genres-display"
-            >
-              <span class="label">Любимые жанры:</span>
-              <div class="genre-list">
-                <span
-                  v-for="genre in profileData.favorite_genres"
-                  :key="genre"
-                  class="genre-badge"
-                >
-                  {{ genre }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="actions-section">
-            <h3>⚡ Действия</h3>
-            <div class="action-list">
-              <NuxtLink to="/" class="action-item">
-                🏠 Главная страница
-              </NuxtLink>
-              <NuxtLink to="/books" class="action-item">
-                📚 Поиск книг
-              </NuxtLink>
-              <NuxtLink to="/chat" class="action-item">
-                🤖 Чат с ИИ
-              </NuxtLink>
-              <NuxtLink to="/profile/onboarding" class="action-item">
-                📝 Пройти онбординг
-              </NuxtLink>
-              <div class="action-item disabled">📖 Мои книги (скоро)</div>
-              <NuxtLink to="/profile/onboarding" class="action-item"
-                >📝 Пройти онбординг</NuxtLink>
-            </div>
-          </div>
-
-          <div class="books-section">
-            <h3>📖 Мои книги</h3>
-            <!-- Tabs -->
-            <div class="tabs-wrap" role="tablist" aria-label="Категории книг">
-              <button
-                v-for="tab in bookTabs"
-                :key="tab.key"
-                class="tab"
-                :class="{ 'tab--active': activeBookTab === tab.key }"
-                :data-key="tab.key"
-                role="tab"
-                :aria-selected="activeBookTab === tab.key"
-                :tabindex="activeBookTab === tab.key ? 0 : -1"
-                @click="activeBookTab = tab.key"
+              <div
+                v-if="
+                  profileData.favorite_genres &&
+                  profileData.favorite_genres.length > 0
+                "
+                class="info-item full-width"
               >
-                <span class="tab__label">{{ tab.label }}</span>
-              </button>
-            </div>
-            <!-- Панель содержимого -->
-            <div class="tab-panel" role="tabpanel">
-              <div class="empty-state">
-                <h4 class="empty-title">{{ currentTabTitle }}</h4>
-                <p class="empty-text">
-                  Здесь будут книги из категории «{{ currentTabTitle }}».
-                </p>
+                <span class="label">Любимые жанры:</span>
+                <div class="genre-list">
+                  <span
+                    v-for="genre in profileData.favorite_genres"
+                    :key="genre"
+                    class="genre-badge"
+                  >
+                    {{ genre }}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -261,12 +306,19 @@
 </template>
 
 <script setup lang="ts">
+import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
+
 definePageMeta({
   middleware: "auth",
 });
 
 const { logout } = useAuth();
 const { fetchProfile, updateProfile } = useProfile();
+const {
+  getBooksByStatus,
+  updateBookStatus,
+  removeBookmark,
+} = useBookmarks();
 
 // SEO
 useHead({
@@ -329,6 +381,11 @@ const activeBookTab = ref<BookTabKey>("reading");
 
 const currentTabTitle = computed(() => {
   return bookTabs.find(t => t.key === activeBookTab.value)?.label ?? "Категория";
+});
+
+// Книги для текущей вкладки
+const booksForCurrentTab = computed(() => {
+  return getBooksByStatus(activeBookTab.value);
 });
 
 // Методы
@@ -394,6 +451,21 @@ const addGenre = () => {
   formData.value.favorite_genres.push(genre);
   newGenre.value = "";
   saveError.value = "";
+};
+
+// Управление закладками
+const handleStatusChange = (bookId: string, event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  const newStatus = target.value as BookStatus;
+  updateBookStatus(bookId, newStatus);
+  // Переключаемся на соответствующую вкладку
+  activeBookTab.value = newStatus;
+};
+
+const handleRemoveBookmark = (bookId: string) => {
+  if (confirm('Удалить книгу из закладок?')) {
+    removeBookmark(bookId);
+  }
 };
 
 const addGenreSuggestion = (genre: string) => {
@@ -466,6 +538,31 @@ const handleSave = async () => {
 .page-header h1 {
   font-size: 36px;
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-home {
+  padding: 12px 24px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-home:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
 }
 
 .btn-logout {
@@ -581,7 +678,6 @@ const handleSave = async () => {
 }
 
 .info-section h3,
-.actions-section h3,
 .books-section h3 {
   margin: 0 0 20px 0;
   font-size: 20px;
@@ -635,10 +731,6 @@ const handleSave = async () => {
   font-weight: 600;
   color: #1a202c;
   font-size: 16px;
-}
-
-.genres-display {
-  margin-top: 16px;
 }
 
 .genre-list {
@@ -874,40 +966,6 @@ const handleSave = async () => {
   background: #f7fafc;
 }
 
-.actions-section {
-  margin-top: 32px;
-  margin-bottom: 32px;
-  padding-bottom: 32px;
-  border-bottom: 2px solid #e2e8f0;
-}
-
-.action-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.action-item {
-  padding: 16px 20px;
-  background: #f7fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-weight: 600;
-  color: #1a202c;
-  text-decoration: none;
-  display: block;
-  transition: all 0.2s;
-}
-
-.action-item:not(.disabled):hover {
-  border-color: #667eea;
-  transform: translateX(4px);
-}
-
-.action-item.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 
 @media (max-width: 768px) {
   .page-header {
@@ -918,6 +976,18 @@ const handleSave = async () => {
 
   .page-header h1 {
     font-size: 28px;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-home,
+  .btn-logout {
+    width: 100%;
+    justify-content: center;
   }
 
   .user-card {
@@ -1051,7 +1121,166 @@ const handleSave = async () => {
 }
 
 .books-section .empty-text {
-  margin: 0 0 16px 0;
+  margin: 0 0 8px 0;
+}
+
+.books-section .empty-hint {
+  margin: 0;
+  font-size: 14px;
+  color: #718096;
+}
+
+.books-section .empty-hint a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.books-section .empty-hint a:hover {
+  text-decoration: underline;
+}
+
+.bookmarks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.bookmark-card {
+  background: #f7fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.bookmark-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.bookmark-cover {
+  height: 200px;
+  background: #edf2f7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.bookmark-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.bookmark-cover .no-cover {
+  font-size: 64px;
+}
+
+.bookmark-info {
+  padding: 16px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.bookmark-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a202c;
+  line-height: 1.3;
+}
+
+.bookmark-subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: #718096;
+  font-style: italic;
+}
+
+.bookmark-authors {
+  margin: 0;
+  font-size: 13px;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+.bookmark-rating {
+  font-size: 12px;
+  color: #d69e2e;
+}
+
+.bookmark-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  font-size: 11px;
+  color: #718096;
+}
+
+.bookmark-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.status-select {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  background: white;
+  color: #1a202c;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.status-select:hover {
+  border-color: #667eea;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.btn-remove-bookmark,
+.btn-book-info {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  color: #718096;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.btn-remove-bookmark:hover {
+  border-color: #fc8181;
+  background: #fed7d7;
+  color: #c53030;
+}
+
+.btn-book-info:hover {
+  border-color: #667eea;
+  background: #edf2f7;
+  color: #667eea;
 }
 
 .books-section .chips {
@@ -1079,6 +1308,15 @@ const handleSave = async () => {
   }
   .books-section .tab-panel {
     padding: 16px;
+  }
+  .bookmarks-grid {
+    grid-template-columns: 1fr;
+  }
+  .bookmark-actions {
+    flex-wrap: wrap;
+  }
+  .status-select {
+    width: 100%;
   }
 }
 </style>

@@ -24,26 +24,7 @@ export interface Chat {
   updatedAt: string;
 }
 
-export interface ChatSettings {
-  model: string;
-  temperature: number;
-  maxTokens: number;
-  includeOnboarding: boolean;
-  includeProfile: boolean;
-  customContext: string;
-}
-
-const DEFAULT_SETTINGS: ChatSettings = {
-  model: 'deepseek/deepseek-chat',
-  temperature: 0.7,
-  maxTokens: 2000,
-  includeOnboarding: true,
-  includeProfile: true,
-  customContext: '',
-};
-
 const STORAGE_KEY_CHATS = 'userChats';
-const STORAGE_KEY_SETTINGS = 'chatSettings';
 const STORAGE_KEY_CURRENT_CHAT = 'currentChatId';
 
 export const useChat = () => {
@@ -53,7 +34,6 @@ export const useChat = () => {
   const messages = ref<ChatMessage[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
-  const settings = ref<ChatSettings>({ ...DEFAULT_SETTINGS });
 
   // Получаем ключ для localStorage с учетом пользователя
   const getStorageKey = (key: string) => {
@@ -79,11 +59,6 @@ export const useChat = () => {
         currentChatId.value = savedCurrentId;
       } else if (chats.value.length > 0 && chats.value[0]) {
         currentChatId.value = chats.value[0].id;
-      }
-
-      const savedSettings = localStorage.getItem(STORAGE_KEY_SETTINGS);
-      if (savedSettings) {
-        settings.value = { ...DEFAULT_SETTINGS, ...JSON.parse(savedSettings) };
       }
     } catch (e) {
       console.error('Ошибка при загрузке чатов:', e);
@@ -144,13 +119,6 @@ export const useChat = () => {
     }
   };
 
-  // Сохранение настроек
-  watch(settings, (newSettings) => {
-    if (process.client) {
-      localStorage.setItem(STORAGE_KEY_SETTINGS, JSON.stringify(newSettings));
-    }
-  }, { deep: true });
-
   /**
    * Отправить сообщение и получить ответ от ИИ
    */
@@ -190,12 +158,11 @@ export const useChat = () => {
           content: msg.content,
         }));
 
-      // Отправляем запрос с настройками
+      // Отправляем запрос
       const response = await $fetch<ChatResponse>('/api/chat', {
         method: 'POST',
         body: {
           messages: messagesToSend,
-          settings: settings.value,
           contextData,
         },
       });
@@ -319,13 +286,6 @@ export const useChat = () => {
     }
   };
 
-  /**
-   * Сбросить настройки к значениям по умолчанию
-   */
-  const resetSettings = () => {
-    settings.value = { ...DEFAULT_SETTINGS };
-  };
-
   // Автоматическое создание первого чата при монтировании (вызывается из компонента)
   const initDefaultChat = () => {
     if (process.client && chats.value.length === 0 && !currentChatId.value) {
@@ -340,14 +300,12 @@ export const useChat = () => {
     messages,
     isLoading,
     error,
-    settings,
     sendMessage,
     createChat,
     deleteChat,
     switchChat,
     renameChat,
     clearChat,
-    resetSettings,
     initDefaultChat,
   };
 };

@@ -104,6 +104,37 @@
             </div>
 
             <div class="book-actions">
+              <button
+                v-if="isBookmarked(book.id)"
+                class="btn-bookmark active"
+                @click="handleRemoveBookmark(book)"
+                title="Удалить из закладок"
+              >
+                ⭐ В закладках
+              </button>
+              <div v-else class="bookmark-dropdown">
+                <button
+                  class="btn-bookmark"
+                  @click="showBookmarkMenu = showBookmarkMenu === book.id ? null : book.id"
+                  title="Добавить в закладки"
+                >
+                  ➕ В закладки
+                </button>
+                <div
+                  v-if="showBookmarkMenu === book.id"
+                  class="bookmark-menu"
+                  @click.stop
+                >
+                  <button
+                    v-for="statusOption in statusOptions"
+                    :key="statusOption.value"
+                    class="bookmark-menu-item"
+                    @click="handleAddBookmark(book, statusOption.value)"
+                  >
+                    {{ statusOption.emoji }} {{ statusOption.label }}
+                  </button>
+                </div>
+              </div>
               <a
                 v-if="book.previewLink"
                 :href="book.previewLink"
@@ -176,7 +207,51 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue';
+import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
+import type { Book } from '~~/types/books';
+
 const { searchBooks } = useBooks();
+const {
+  addBookmark,
+  removeBookmark,
+  isBookmarked,
+  updateBookStatus,
+} = useBookmarks();
+
+const showBookmarkMenu = ref<string | null>(null);
+
+const statusOptions = [
+  { value: 'reading' as BookStatus, label: 'Читаю', emoji: '📖' },
+  { value: 'planned' as BookStatus, label: 'В планах', emoji: '📝' },
+  { value: 'finished' as BookStatus, label: 'Прочитано', emoji: '✅' },
+  { value: 'shelved' as BookStatus, label: 'Отложено', emoji: '⏸️' },
+  { value: 'dropped' as BookStatus, label: 'Брошено', emoji: '❌' },
+  { value: 'favourite' as BookStatus, label: 'Любимые', emoji: '💖' },
+];
+
+const handleAddBookmark = (book: Book, status: BookStatus) => {
+  addBookmark(book, status);
+  showBookmarkMenu.value = null;
+};
+
+const handleRemoveBookmark = (book: Book) => {
+  if (confirm('Удалить книгу из закладок?')) {
+    removeBookmark(book.id);
+  }
+};
+
+// Закрываем меню при клике вне его
+onMounted(() => {
+  if (process.client) {
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.bookmark-dropdown')) {
+        showBookmarkMenu.value = null;
+      }
+    });
+  }
+});
 
 // SEO
 useHead({
@@ -491,6 +566,73 @@ const truncateText = (text: string, maxLength: number) => {
   display: flex;
   gap: 8px;
   margin-top: auto;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+.bookmark-dropdown {
+  position: relative;
+}
+
+.btn-bookmark {
+  padding: 10px 14px;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s;
+  border: 2px solid #667eea;
+  background: white;
+  color: #667eea;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-bookmark:hover {
+  background: #edf2f7;
+}
+
+.btn-bookmark.active {
+  background: #fbd38d;
+  border-color: #f6ad55;
+  color: #744210;
+}
+
+.bookmark-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 160px;
+  overflow: hidden;
+}
+
+.bookmark-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  text-align: left;
+  border: none;
+  background: white;
+  color: #1a202c;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.bookmark-menu-item:hover {
+  background: #f7fafc;
+}
+
+.bookmark-menu-item:not(:last-child) {
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .btn-preview,
@@ -503,6 +645,7 @@ const truncateText = (text: string, maxLength: number) => {
   font-size: 13px;
   font-weight: 600;
   transition: all 0.2s;
+  min-width: 120px;
 }
 
 .btn-preview {

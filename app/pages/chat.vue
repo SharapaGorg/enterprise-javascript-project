@@ -30,6 +30,9 @@
             <p class="chat-subtitle">Задайте вопрос о книгах, получите рекомендации или обсудите литературу</p>
           </div>
           <div class="header-actions">
+            <NuxtLink to="/" class="btn-home" title="На главную">
+              🏠 Главная
+            </NuxtLink>
             <button v-if="messages.length > 0" class="btn-clear" @click="handleClear">🗑️ Очистить</button>
             <button class="btn-new-chat-header" @click="handleCreateChat" title="Новый чат">
               ➕ Новый
@@ -84,47 +87,77 @@
 
       <aside class="chat-sidebar">
         <div class="sidebar-content">
-          <h3 class="sidebar-title">🎯 Тематические фильтры</h3>
-
-          <div class="filter-section">
-            <label class="filter-label">📚 Жанры</label>
-            <div class="filter-tags compact">
-              <button
-                v-for="genre in availableGenres"
-                :key="genre"
-                :class="['filter-tag', { active: selectedGenres.includes(genre) }]"
-                @click="toggleGenre(genre)"
-              >
-                {{ genre }}
-              </button>
+          <!-- Блок с рекомендациями книг -->
+          <div v-if="showBookResults" class="books-results-section">
+            <div class="sidebar-header-with-close">
+              <h3 class="sidebar-title">📚 Рекомендуемые книги</h3>
+              <button class="btn-close-results" @click="closeBookResults" title="Закрыть">✕</button>
+            </div>
+            
+            <div v-if="isSearchingBooks" class="books-loading">
+              <div class="loading-spinner"></div>
+              <p>Ищем книги...</p>
+            </div>
+            
+            <div v-else-if="recommendedBooks.length > 0" class="books-list">
+                    <BookCard
+                      v-for="book in recommendedBooks"
+                      :key="book.id"
+                      :book="book"
+                      :show-bookmark="true"
+                      @click="handleBookClick"
+                    />
+            </div>
+            
+            <div v-else class="books-empty">
+              <p>Книги не найдены</p>
             </div>
           </div>
 
-          <div class="filter-section">
-            <label class="filter-label">📖 Тип</label>
-            <div class="filter-tags compact">
-              <button
-                v-for="type in availableTypes"
-                :key="type"
-                :class="['filter-tag', { active: selectedType === type }]"
-                @click="selectedType = type"
-              >
-                {{ type }}
-              </button>
-            </div>
-          </div>
+          <!-- Блок с фильтрами (показывается, когда нет результатов поиска) -->
+          <div v-else>
+            <h3 class="sidebar-title">🎯 Тематические фильтры</h3>
 
-          <div class="filter-section">
-            <label class="filter-label">🎭 Эпоха</label>
-            <div class="filter-tags compact">
-              <button
-                v-for="era in availableEras"
-                :key="era"
-                :class="['filter-tag', { active: selectedEra === era }]"
-                @click="selectedEra = era"
-              >
-                {{ era }}
-              </button>
+            <div class="filter-section">
+              <label class="filter-label">📚 Жанры</label>
+              <div class="filter-tags compact">
+                <button
+                  v-for="genre in availableGenres"
+                  :key="genre"
+                  :class="['filter-tag', { active: selectedGenres.includes(genre) }]"
+                  @click="toggleGenre(genre)"
+                >
+                  {{ genre }}
+                </button>
+              </div>
+            </div>
+
+            <div class="filter-section">
+              <label class="filter-label">📖 Тип</label>
+              <div class="filter-tags compact">
+                <button
+                  v-for="type in availableTypes"
+                  :key="type"
+                  :class="['filter-tag', { active: selectedType === type }]"
+                  @click="selectedType = type"
+                >
+                  {{ type }}
+                </button>
+              </div>
+            </div>
+
+            <div class="filter-section">
+              <label class="filter-label">🎭 Эпоха</label>
+              <div class="filter-tags compact">
+                <button
+                  v-for="era in availableEras"
+                  :key="era"
+                  :class="['filter-tag', { active: selectedEra === era }]"
+                  @click="selectedEra = era"
+                >
+                  {{ era }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -166,6 +199,10 @@ import { ref, watch, nextTick, computed, onMounted } from 'vue';
 import { useChat } from '@/composables/useChat';
 import { useOnboarding } from '@/composables/useOnboarding';
 import { useProfile } from '@/composables/useProfile';
+import { useBooks } from '@/composables/useBooks';
+import { parseBookRecommendations } from '@/utils/bookParser';
+import type { Book } from '~~/types/books';
+import BookCard from '@/components/BookCard.vue';
 
 definePageMeta({
   middleware: 'auth',
@@ -186,7 +223,6 @@ const {
   messages,
   isLoading,
   error,
-  settings,
   sendMessage,
   createChat,
   deleteChat,
@@ -197,9 +233,15 @@ const {
 } = useChat();
 const { answers: onboardingAnswers } = useOnboarding();
 const { fetchProfile } = useProfile();
+const { getBooks } = useBooks();
 const inputMessage = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
 const isChatListOpen = ref(true); // По умолчанию открыт
+
+// Состояние для найденных книг
+const recommendedBooks = ref<Book[]>([]);
+const isSearchingBooks = ref(false);
+const showBookResults = ref(false);
 
 // Тематические фильтры
 const availableGenres = [
@@ -263,12 +305,12 @@ const contextData = computed(() => {
   } = {};
 
   // Добавляем данные онбординга, если они есть
-  if (settings.value.includeOnboarding && onboardingAnswers.value) {
+  if (onboardingAnswers.value) {
     data.onboardingAnswers = { ...onboardingAnswers.value };
   }
 
   // Добавляем данные профиля, если они есть
-  if (settings.value.includeProfile && profileData.value?.profile) {
+  if (profileData.value?.profile) {
     data.profileData = {
       full_name: profileData.value.profile.full_name,
       favorite_genres: profileData.value.profile.favorite_genres,
@@ -301,6 +343,24 @@ watch(messages, () => {
   nextTick(() => {
     scrollToBottom();
   });
+}, { deep: true });
+
+// Отдельный watch для отслеживания завершения загрузки и проверки рекомендаций
+watch(isLoading, async (newLoading, oldLoading) => {
+  // Когда загрузка завершается (с true на false), проверяем последнее сообщение
+  if (oldLoading === true && newLoading === false) {
+    await nextTick();
+    
+    if (messages.value.length > 0) {
+      const lastMessage = messages.value[messages.value.length - 1];
+      
+      if (lastMessage.role === 'assistant' && lastMessage.content && lastMessage.content.trim().length > 0) {
+        console.log('Загрузка завершена, проверяем последнее сообщение на рекомендации книг');
+        console.log('Содержимое (первые 200 символов):', lastMessage.content.substring(0, 200));
+        await checkAndSearchBooks(lastMessage.content);
+      }
+    }
+  }
 });
 
 // Переключаемся на новый чат при его создании
@@ -308,6 +368,9 @@ watch(currentChatId, () => {
   nextTick(() => {
     scrollToBottom();
   });
+  // Сбрасываем результаты поиска при смене чата
+  showBookResults.value = false;
+  recommendedBooks.value = [];
 });
 
 // Инициализация первого чата при монтировании
@@ -364,11 +427,16 @@ function handleRenameChat(chatId: string, newTitle: string) {
 }
 
 function formatMessage(content: string): string {
+  // Удаляем технические метки структурированного формата книг
+  let formatted = content.replace(/---BOOKS_START---[\s\S]*?---BOOKS_END---/g, '');
+  
   // Простое форматирование: заменяем переносы строк на <br>
-  return content
+  formatted = formatted
     .replace(/\n/g, '<br>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  
+  return formatted;
 }
 
 function formatTime(date: Date): string {
@@ -376,6 +444,80 @@ function formatTime(date: Date): string {
     hour: '2-digit',
     minute: '2-digit',
   });
+}
+
+// Проверка и поиск книг из рекомендаций ИИ
+// Возвращает true, если книги были найдены и обработаны
+async function checkAndSearchBooks(messageContent: string): Promise<boolean> {
+  try {
+    console.log('Парсинг рекомендаций книг из сообщения...');
+    const parsedBooks = parseBookRecommendations(messageContent);
+    console.log('Найдено книг:', parsedBooks.length, parsedBooks);
+    
+    if (parsedBooks.length === 0) {
+      // Не скрываем результаты, если они уже были показаны (чтобы не мелькало)
+      if (!showBookResults.value) {
+        return false;
+      }
+      return false;
+    }
+
+    console.log('Начинаем поиск книг...');
+    isSearchingBooks.value = true;
+    recommendedBooks.value = [];
+    showBookResults.value = true;
+
+    // Ищем каждую книгу параллельно
+    const searchPromises = parsedBooks.map(async (parsedBook) => {
+      try {
+        const result = await getBooks({
+          query: parsedBook.query,
+          limit: 3, // Берем первые 3 результата
+          language: 'ru',
+        });
+        
+        if (result.books && result.books.length > 0) {
+          // Возвращаем первый результат (наиболее релевантный)
+          return result.books[0];
+        }
+        return null;
+      } catch (error) {
+        console.error('Ошибка при поиске книги:', error);
+        return null;
+      }
+    });
+
+    const results = await Promise.all(searchPromises);
+    recommendedBooks.value = results.filter((book): book is Book => book !== null);
+    
+    // Если ничего не найдено, скрываем результаты
+    if (recommendedBooks.value.length === 0) {
+      showBookResults.value = false;
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Ошибка при парсинге рекомендаций:', error);
+    showBookResults.value = false;
+    return false;
+  } finally {
+    isSearchingBooks.value = false;
+  }
+}
+
+function handleBookClick(book: Book) {
+  // Открываем информацию о книге в новой вкладке или модальном окне
+  if (book.infoLink) {
+    window.open(book.infoLink, '_blank');
+  } else if (book.previewLink) {
+    window.open(book.previewLink, '_blank');
+  }
+}
+
+function closeBookResults() {
+  showBookResults.value = false;
+  recommendedBooks.value = [];
 }
 </script>
 
@@ -455,6 +597,7 @@ function formatTime(date: Date): string {
   flex-shrink: 0;
 }
 
+.btn-home,
 .btn-new-chat-header,
 .btn-clear {
   padding: 6px 12px;
@@ -467,8 +610,12 @@ function formatTime(date: Date): string {
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
 }
 
+.btn-home:hover,
 .btn-new-chat-header:hover,
 .btn-clear:hover {
   background: rgba(255, 255, 255, 0.3);
@@ -784,6 +931,81 @@ function formatTime(date: Date): string {
 
 .filter-tag.active:hover {
   background: linear-gradient(135deg, #5568d3 0%, #6a3d8c 100%);
+}
+
+/* Стили для блока с рекомендациями книг */
+.books-results-section {
+  width: 100%;
+}
+
+.sidebar-header-with-close {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.btn-close-results {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  color: #718096;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.btn-close-results:hover {
+  background: #e2e8f0;
+  color: #4a5568;
+  border-color: #cbd5e0;
+}
+
+.books-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #718096;
+  font-size: 13px;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.books-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.books-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #718096;
+  font-size: 13px;
 }
 
 .chat-form {
