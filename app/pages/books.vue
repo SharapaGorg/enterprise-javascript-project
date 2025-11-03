@@ -62,11 +62,17 @@
       <div v-else-if="books && books.length > 0" class="books-grid">
         <div v-for="book in books" :key="book.id" class="book-card">
           <div class="book-cover">
-            <img
-              v-if="book.thumbnail"
-              :src="book.thumbnail"
+            <NuxtImg
+              v-if="book.cover || book.thumbnail"
+              :src="getHighQualityImageUrl(book.cover || book.thumbnail)"
               :alt="book.title"
               loading="lazy"
+              quality="90"
+              format="webp"
+              :width="150"
+              :height="225"
+              fit="cover"
+              class="book-cover-image"
             />
             <div v-else class="no-cover">📖</div>
           </div>
@@ -209,6 +215,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
+import { useBookImage } from '@/composables/useBookImage';
 import type { Book } from '~~/types/books';
 
 const { searchBooks } = useBooks();
@@ -218,6 +225,7 @@ const {
   isBookmarked,
   updateBookStatus,
 } = useBookmarks();
+const { getHighQualityImageUrl } = useBookImage();
 
 const showBookmarkMenu = ref<string | null>(null);
 
@@ -477,18 +485,25 @@ const truncateText = (text: string, maxLength: number) => {
 }
 
 .book-cover {
-  height: 200px;
+  height: 225px;
   background: #f7fafc;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.book-cover img {
+.book-cover-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-cover-image {
+  transform: scale(1.05);
 }
 
 .no-cover {

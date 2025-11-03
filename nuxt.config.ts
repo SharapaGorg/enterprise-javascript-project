@@ -15,10 +15,27 @@ export default defineNuxtConfig({
 
   srcDir: 'app/',
 
-  modules: ['@nuxtjs/supabase'],
+  modules: ['@nuxtjs/supabase', '@nuxt/image'],
 
   supabase: {
     redirect: false,
+  },
+
+  image: {
+    quality: 90,
+    format: ['webp', 'jpeg'],
+    screens: {
+      'xs': 320,
+      'sm': 640,
+      'md': 768,
+      'lg': 1024,
+      'xl': 1280,
+      'xxl': 1536,
+    },
+    domains: ['books.google.com'],
+    alias: {
+      google: 'https://books.google.com',
+    },
   },
 
   app: {

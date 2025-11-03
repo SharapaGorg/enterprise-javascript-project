@@ -1,10 +1,18 @@
 <template>
   <div class="book-card" @click="handleClick">
     <div class="book-card-image">
-      <img
-        v-if="book.thumbnail || book.cover"
-        :src="book.thumbnail || book.cover"
+      <NuxtImg
+        v-if="book.cover || book.thumbnail"
+        :src="getOptimizedImageUrl()"
         :alt="book.title"
+        :placeholder="book.thumbnail"
+        loading="lazy"
+        quality="90"
+        format="webp"
+        :width="imageDimensions.width"
+        :height="imageDimensions.height"
+        fit="cover"
+        class="book-image"
         @error="handleImageError"
       />
       <div v-else class="book-card-placeholder">📚</div>
@@ -36,6 +44,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
+import { useBookImage } from '@/composables/useBookImage';
 import type { Book } from '~~/types/books';
 
 interface Props {
@@ -52,8 +61,15 @@ const emit = defineEmits<{
 }>();
 
 const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
+const { getHighQualityImageUrl, getImageDimensions } = useBookImage();
 
 const imageError = ref(false);
+const imageDimensions = getImageDimensions('medium');
+
+function getOptimizedImageUrl() {
+  const imageUrl = props.book.cover || props.book.thumbnail;
+  return getHighQualityImageUrl(imageUrl);
+}
 
 const isBookmarkedValue = computed(() => isBookmarked(props.book.id));
 
@@ -80,13 +96,13 @@ function handleBookmarkClick() {
 <style scoped>
 .book-card {
   background: white;
-  border-radius: 8px;
-  padding: 12px;
+  border-radius: 12px;
+  padding: 16px;
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid #e2e8f0;
   display: flex;
-  gap: 12px;
+  gap: 16px;
   margin-bottom: 12px;
 }
 
@@ -97,21 +113,27 @@ function handleBookmarkClick() {
 }
 
 .book-card-image {
-  width: 60px;
-  height: 90px;
+  width: 80px;
+  height: 120px;
   flex-shrink: 0;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   background: #f7fafc;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.book-card-image img {
+.book-card-image :deep(img) {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-card-image :deep(img) {
+  transform: scale(1.05);
 }
 
 .book-card-placeholder {
