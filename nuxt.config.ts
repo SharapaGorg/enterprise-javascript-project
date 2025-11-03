@@ -6,6 +6,11 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     booksApiKey: process.env.BOOKS_API_KEY || '',
+    openRouterApiKey: process.env.DEEP_SEEK_API_KEY || '', // Используем существующий ключ для OpenRouter
+    public: {
+      siteUrl: process.env.SITE_URL || 'http://localhost:3000',
+      siteName: 'ReadMind AI',
+    },
   },
 
   srcDir: 'app/',

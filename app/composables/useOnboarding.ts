@@ -14,24 +14,30 @@ export function useOnboarding() {
 
   const steps = ref<QA[]>([
     {
-      id: "goal",
-      question: "Зачем вы используете приложение? (основная цель)",
-      type: "select",
-      options: [
-        "Отслеживание количества прочитанного",
-        "Поиск новых книг",
-        "AI-рекомендации",
-        "Другое",
-      ],
+      id: "languages",
+      question: "На каких языках вы обычно читаете?",
+      type: "text",
     },
     {
-      id: "level",
-      question: "Ваш уровень читателя?",
-      type: "select",
-      options: ["Новичок", "Уверенный", "Про"],
+      id: "readingPurpose",
+      question: "Зачем вы обычно читаете книги?",
+      type: "text",
     },
-    { id: "notify", question: "Включить напоминания по e-mail?", type: "bool" },
-    { id: "about", question: "Расскажите о себе в двух словах", type: "text" },
+    {
+      id: "bookPreference",
+      question: "Какие книги вам приносят больше удовольствия?",
+      type: "text",
+    },
+    {
+      id: "favoriteBooks",
+      question: "Назовите 2–3 любимые книги и авторов",
+      type: "text",
+    },
+    {
+      id: "readingFrequency",
+      question: "Как часто вы читаете?",
+      type: "text",
+    },
   ]);
 
   const current = ref(0);
