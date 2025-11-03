@@ -15,30 +15,13 @@
     </div>
 
     <div v-else class="bookmarks-grid">
-      <div
+      <BookCard
         v-for="book in displayedBookmarks"
         :key="book.id"
-        class="bookmark-preview-card"
-        @click="handleBookClick(book)"
-      >
-        <div class="bookmark-preview-cover">
-          <img
-            v-if="book.thumbnail"
-            :src="book.thumbnail"
-            :alt="book.title"
-          />
-          <div v-else class="no-cover">📖</div>
-        </div>
-        <div class="bookmark-preview-info">
-          <h4 class="bookmark-preview-title">{{ book.title }}</h4>
-          <p class="bookmark-preview-author">
-            {{ book.authors.join(', ') || 'Автор неизвестен' }}
-          </p>
-          <div class="bookmark-preview-status">
-            {{ getStatusLabel(book.status) }}
-          </div>
-        </div>
-      </div>
+        :book="book"
+        :show-bookmark="false"
+        @click="handleBookClick"
+      />
     </div>
   </div>
 </template>
@@ -47,6 +30,7 @@
 import { computed } from 'vue';
 import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
 import type { BookmarkedBook } from '@/composables/useBookmarks';
+import BookCard from '@/components/BookCard.vue';
 
 const { getAllBookmarks } = useBookmarks();
 
@@ -145,96 +129,20 @@ function handleBookClick(book: BookmarkedBook) {
 
 .bookmarks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
-}
-
-.bookmark-preview-card {
-  background: #f7fafc;
-  border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  flex-direction: column;
-}
-
-.bookmark-preview-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  border-color: #667eea;
-}
-
-.bookmark-preview-cover {
-  height: 180px;
-  background: #edf2f7;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.bookmark-preview-cover img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
-.bookmark-preview-cover .no-cover {
-  font-size: 48px;
-  color: #cbd5e0;
-}
-
-.bookmark-preview-info {
-  padding: 12px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.bookmark-preview-title {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #1a202c;
-  line-height: 1.3;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.bookmark-preview-author {
-  margin: 0;
-  font-size: 12px;
-  color: #718096;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.bookmark-preview-status {
-  margin-top: auto;
-  font-size: 11px;
-  color: #667eea;
-  font-weight: 600;
-  padding: 4px 8px;
-  background: #f0f4ff;
-  border-radius: 6px;
-  text-align: center;
+/* BookCard component handles its own styling */
+.bookmarks-grid :deep(.book-card) {
+  margin-bottom: 0;
 }
 
 @media (max-width: 768px) {
   .bookmarks-grid {
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    grid-template-columns: 1fr;
     gap: 12px;
-  }
-
-  .bookmark-preview-cover {
-    height: 160px;
   }
 
   .bookmarks-header {

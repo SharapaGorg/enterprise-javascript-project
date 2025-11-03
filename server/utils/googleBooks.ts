@@ -18,12 +18,12 @@ export function parseGoogleBook(volume: GoogleBookVolume): Book {
     categories: volumeInfo.categories || [],
     rating: volumeInfo.averageRating,
     ratingsCount: volumeInfo.ratingsCount,
-    thumbnail: volumeInfo.imageLinks?.thumbnail?.replace('http://', 'https://').replace('&edge=curl', ''),
-    cover: volumeInfo.imageLinks?.extraLarge?.replace('http://', 'https://').replace('&edge=curl', '') || 
-           volumeInfo.imageLinks?.large?.replace('http://', 'https://').replace('&edge=curl', '') || 
-           volumeInfo.imageLinks?.medium?.replace('http://', 'https://').replace('&edge=curl', '') || 
-           volumeInfo.imageLinks?.small?.replace('http://', 'https://').replace('&edge=curl', '') ||
-           volumeInfo.imageLinks?.thumbnail?.replace('http://', 'https://').replace('&edge=curl', ''),
+    thumbnail: volumeInfo.imageLinks?.thumbnail?.replace('http://', 'https://'),
+    cover: volumeInfo.imageLinks?.extraLarge?.replace('http://', 'https://') || 
+           volumeInfo.imageLinks?.large?.replace('http://', 'https://') || 
+           volumeInfo.imageLinks?.medium?.replace('http://', 'https://') || 
+           volumeInfo.imageLinks?.small?.replace('http://', 'https://') ||
+           volumeInfo.imageLinks?.thumbnail?.replace('http://', 'https://'),
     language: volumeInfo.language,
     previewLink: volumeInfo.previewLink,
     infoLink: volumeInfo.infoLink,

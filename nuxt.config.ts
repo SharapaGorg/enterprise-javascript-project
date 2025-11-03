@@ -32,10 +32,13 @@ export default defineNuxtConfig({
       'xl': 1280,
       'xxl': 1536,
     },
-    domains: ['books.google.com'],
-    alias: {
-      google: 'https://books.google.com',
-    },
+    domains: ['books.google.com', 'books.googleusercontent.com'],
+    providers: {
+      google: {
+        provider: '~/providers/google-books.ts',
+        options: {}
+      }
+    }
   },
 
   app: {

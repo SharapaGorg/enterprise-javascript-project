@@ -1,21 +1,18 @@
 <template>
   <div class="book-card" @click="handleClick">
     <div class="book-card-image">
-      <NuxtImg
-        v-if="book.cover || book.thumbnail"
-        :src="getOptimizedImageUrl()"
+      <img
+        v-if="(book.cover || book.thumbnail) && !imageError"
+        :src="book.cover || book.thumbnail"
         :alt="book.title"
-        :placeholder="book.thumbnail"
         loading="lazy"
-        quality="90"
-        format="webp"
-        :width="imageDimensions.width"
-        :height="imageDimensions.height"
-        fit="cover"
         class="book-image"
         @error="handleImageError"
       />
-      <div v-else class="book-card-placeholder">📚</div>
+      <div v-else class="book-card-placeholder">
+        <span class="placeholder-icon">📚</span>
+        <span class="placeholder-text">{{ book.title.substring(0, 1).toUpperCase() }}</span>
+      </div>
     </div>
     <div class="book-card-content">
       <div class="book-card-header">
@@ -37,6 +34,9 @@
         ⭐ {{ book.rating.toFixed(1) }}
         <span v-if="book.ratingsCount">({{ book.ratingsCount }})</span>
       </div>
+      <div v-if="'status' in book && book.status" class="book-card-status">
+        {{ getStatusLabel(book.status) }}
+      </div>
     </div>
   </div>
 </template>
@@ -46,9 +46,10 @@ import { computed } from 'vue';
 import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
 import { useBookImage } from '@/composables/useBookImage';
 import type { Book } from '~~/types/books';
+import type { BookmarkedBook } from '@/composables/useBookmarks';
 
 interface Props {
-  book: Book;
+  book: Book | BookmarkedBook;
   showBookmark?: boolean;
 }
 
@@ -68,12 +69,27 @@ const imageDimensions = getImageDimensions('medium');
 
 function getOptimizedImageUrl() {
   const imageUrl = props.book.cover || props.book.thumbnail;
-  return getHighQualityImageUrl(imageUrl);
+  // Don't modify the URL too aggressively - just ensure HTTPS
+  return imageUrl ? imageUrl.replace('http://', 'https://') : '';
 }
 
 const isBookmarkedValue = computed(() => isBookmarked(props.book.id));
 
-function handleImageError() {
+const statusLabels: Record<BookStatus, string> = {
+  reading: '📖 Читаю',
+  planned: '📝 В планах',
+  finished: '✅ Прочитано',
+  shelved: '⏸️ Отложено',
+  dropped: '❌ Брошено',
+  favourite: '💖 Любимые',
+};
+
+function getStatusLabel(status: BookStatus): string {
+  return statusLabels[status] || status;
+}
+
+function handleImageError(event: Event) {
+  console.error('Image failed to load:', (event.target as HTMLImageElement).src);
   imageError.value = true;
 }
 
@@ -96,13 +112,13 @@ function handleBookmarkClick() {
 <style scoped>
 .book-card {
   background: white;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 8px;
+  padding: 12px;
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid #e2e8f0;
   display: flex;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -113,37 +129,44 @@ function handleBookmarkClick() {
 }
 
 .book-card-image {
-  width: 80px;
-  height: 120px;
+  width: 60px;
+  height: 90px;
   flex-shrink: 0;
-  border-radius: 8px;
+  border-radius: 4px;
   overflow: hidden;
   background: #f7fafc;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.book-card-image :deep(img) {
+.book-card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
-}
-
-.book-card:hover .book-card-image :deep(img) {
-  transform: scale(1.05);
 }
 
 .book-card-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, #e2e8f0 0%, #f7fafc 100%);
+  color: #718096;
+  position: relative;
+}
+
+.placeholder-icon {
   font-size: 32px;
-  color: #cbd5e0;
+  margin-bottom: 4px;
+}
+
+.placeholder-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #4a5568;
 }
 
 .book-card-content {
@@ -229,6 +252,18 @@ function handleBookmarkClick() {
 .book-card-rating span {
   color: #718096;
   font-size: 10px;
+}
+
+.book-card-status {
+  margin-top: auto;
+  font-size: 11px;
+  color: #667eea;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: #f0f4ff;
+  border-radius: 6px;
+  text-align: center;
+  white-space: nowrap;
 }
 </style>
 
