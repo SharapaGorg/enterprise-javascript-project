@@ -65,7 +65,7 @@
             <div class="book-cover">
               <img
                 v-if="book.cover || book.thumbnail"
-                :src="book.cover || book.thumbnail"
+                :src="getHighQualityImageUrl(book)"
                 :alt="book.title"
                 loading="lazy"
                 class="book-cover-image"
@@ -236,6 +236,37 @@ const statusOptions = [
 const handleAddBookmark = (book: Book, status: BookStatus) => {
   addBookmark(book, status);
   showBookmarkMenu.value = null;
+};
+
+// Optimize Google Books image URL for higher quality
+const getHighQualityImageUrl = (book: Book): string => {
+  const imageUrl = book.cover || book.thumbnail;
+  if (!imageUrl) return '';
+  
+  let url = imageUrl;
+  
+  // For Google Books images, we can add parameters for better quality
+  if (url.includes('books.google.com') || url.includes('googleusercontent.com')) {
+    // Remove any existing zoom parameter
+    url = url.replace(/&zoom=\d/, '');
+    // Add high zoom level
+    url += '&zoom=2';
+    
+    // Remove edge curl effect if present
+    url = url.replace('&edge=curl', '');
+    
+    // Add printsec parameter for better quality
+    if (!url.includes('printsec=')) {
+      url += '&printsec=frontcover';
+    }
+    
+    // Add img=1 parameter
+    if (!url.includes('img=')) {
+      url += '&img=1';
+    }
+  }
+  
+  return url;
 };
 
 const handleRemoveBookmark = (book: Book) => {
@@ -506,6 +537,8 @@ const truncateText = (text: string, maxLength: number) => {
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
 .book-card:hover .book-cover-image {
