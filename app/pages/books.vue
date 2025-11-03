@@ -63,13 +63,17 @@
         <div v-for="book in books" :key="book.id" class="book-card">
           <div class="book-card-content">
             <div class="book-cover">
-              <img
-                v-if="book.cover || book.thumbnail"
-                :src="getHighQualityImageUrl(book)"
-                :alt="book.title"
-                loading="lazy"
-                class="book-cover-image"
-              />
+              <div v-if="book.cover || book.thumbnail" class="image-container">
+                <div class="image-skeleton" :class="{ 'loaded': imageLoadStates[book.id] }"></div>
+                <img
+                  :src="getHighQualityImageUrl(book)"
+                  :alt="book.title"
+                  loading="lazy"
+                  class="book-cover-image"
+                  @load="handleImageLoad(book.id)"
+                  @error="handleImageError(book.id)"
+                />
+              </div>
               <div v-else class="no-cover">📖</div>
             </div>
             
@@ -224,6 +228,9 @@ const {
 
 const showBookmarkMenu = ref<string | null>(null);
 
+// Track image loading states
+const imageLoadStates = ref<Record<string, boolean>>({});
+
 const statusOptions = [
   { value: 'reading' as BookStatus, label: 'Читаю', emoji: '📖' },
   { value: 'planned' as BookStatus, label: 'В планах', emoji: '📝' },
@@ -273,6 +280,14 @@ const handleRemoveBookmark = (book: Book) => {
   if (confirm('Удалить книгу из закладок?')) {
     removeBookmark(book.id);
   }
+};
+
+const handleImageLoad = (bookId: string) => {
+  imageLoadStates.value[bookId] = true;
+};
+
+const handleImageError = (bookId: string) => {
+  imageLoadStates.value[bookId] = true; // Hide skeleton even on error
 };
 
 // Закрываем меню при клике вне его
@@ -530,15 +545,52 @@ const truncateText = (text: string, maxLength: number) => {
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
+  position: relative;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 12px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.image-skeleton.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .book-cover-image {
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  z-index: 2;
 }
 
 .book-card:hover .book-cover-image {

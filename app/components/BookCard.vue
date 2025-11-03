@@ -1,14 +1,17 @@
 <template>
   <div class="book-card" @click="handleClick">
     <div class="book-card-image">
-      <img
-        v-if="(book.cover || book.thumbnail) && !imageError"
-        :src="book.cover || book.thumbnail"
-        :alt="book.title"
-        loading="lazy"
-        class="book-image"
-        @error="handleImageError"
-      />
+      <div v-if="(book.cover || book.thumbnail) && !imageError" class="image-container">
+        <div class="image-skeleton" :class="{ 'loaded': imageLoaded }"></div>
+        <img
+          :src="book.cover || book.thumbnail"
+          :alt="book.title"
+          loading="lazy"
+          class="book-image"
+          @error="handleImageError"
+          @load="handleImageLoad"
+        />
+      </div>
       <div v-else class="book-card-placeholder">
         <span class="placeholder-icon">📚</span>
         <span class="placeholder-text">{{ book.title.substring(0, 1).toUpperCase() }}</span>
@@ -65,6 +68,7 @@ const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
 const { getHighQualityImageUrl, getImageDimensions } = useBookImage();
 
 const imageError = ref(false);
+const imageLoaded = ref(false);
 const imageDimensions = getImageDimensions('medium');
 
 function getOptimizedImageUrl() {
@@ -91,6 +95,11 @@ function getStatusLabel(status: BookStatus): string {
 function handleImageError(event: Event) {
   console.error('Image failed to load:', (event.target as HTMLImageElement).src);
   imageError.value = true;
+  imageLoaded.value = true; // Hide skeleton
+}
+
+function handleImageLoad() {
+  imageLoaded.value = true;
 }
 
 function handleClick() {
@@ -138,12 +147,49 @@ function handleBookmarkClick() {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.image-skeleton.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .book-card-image img {
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 2;
 }
 
 .book-card-placeholder {

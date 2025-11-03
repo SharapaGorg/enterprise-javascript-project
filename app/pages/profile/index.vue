@@ -74,12 +74,16 @@
               >
                 <div class="bookmark-card-content">
                   <div class="bookmark-cover">
-                    <img
-                      v-if="book.cover || book.thumbnail"
-                      :src="getHighQualityImageUrl(book)"
-                      :alt="book.title"
-                      class="bookmark-cover-image"
-                    />
+                    <div v-if="book.cover || book.thumbnail" class="image-container">
+                      <div class="image-skeleton" :class="{ 'loaded': imageLoadStates[book.id] }"></div>
+                      <img
+                        :src="getHighQualityImageUrl(book)"
+                        :alt="book.title"
+                        class="bookmark-cover-image"
+                        @load="handleImageLoad(book.id)"
+                        @error="handleImageError(book.id)"
+                      />
+                    </div>
                     <div v-else class="no-cover">📖</div>
                   </div>
                   <div class="bookmark-info">
@@ -382,6 +386,9 @@ const bookTabs: { key: BookTabKey; label: string }[] = [
 
 const activeBookTab = ref<BookTabKey>("reading");
 
+// Track image loading states
+const imageLoadStates = ref<Record<string, boolean>>({});
+
 const currentTabTitle = computed(() => {
   return bookTabs.find(t => t.key === activeBookTab.value)?.label ?? "Категория";
 });
@@ -500,6 +507,14 @@ const getHighQualityImageUrl = (book: any): string => {
   }
   
   return url;
+};
+
+const handleImageLoad = (bookId: string) => {
+  imageLoadStates.value[bookId] = true;
+};
+
+const handleImageError = (bookId: string) => {
+  imageLoadStates.value[bookId] = true; // Hide skeleton even on error
 };
 
 const addGenreSuggestion = (genre: string) => {
@@ -1215,15 +1230,52 @@ const handleSave = async () => {
   border-radius: 4px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   flex-shrink: 0;
+  position: relative;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.image-skeleton.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .bookmark-cover-image {
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
+  z-index: 2;
 }
 
 .bookmark-card:hover .bookmark-cover-image {
