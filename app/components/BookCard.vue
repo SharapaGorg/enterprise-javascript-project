@@ -1,13 +1,21 @@
 <template>
   <div class="book-card" @click="handleClick">
     <div class="book-card-image">
-      <img
-        v-if="book.thumbnail || book.cover"
-        :src="book.thumbnail || book.cover"
-        :alt="book.title"
-        @error="handleImageError"
-      />
-      <div v-else class="book-card-placeholder">📚</div>
+      <div v-if="(book.cover || book.thumbnail) && !imageError" class="image-container">
+        <div class="image-skeleton" :class="{ 'loaded': imageLoaded }"></div>
+        <img
+          :src="book.cover || book.thumbnail"
+          :alt="book.title"
+          loading="lazy"
+          class="book-image"
+          @error="handleImageError"
+          @load="handleImageLoad"
+        />
+      </div>
+      <div v-else class="book-card-placeholder">
+        <span class="placeholder-icon">📚</span>
+        <span class="placeholder-text">{{ book.title.substring(0, 1).toUpperCase() }}</span>
+      </div>
     </div>
     <div class="book-card-content">
       <div class="book-card-header">
@@ -29,6 +37,9 @@
         ⭐ {{ book.rating.toFixed(1) }}
         <span v-if="book.ratingsCount">({{ book.ratingsCount }})</span>
       </div>
+      <div v-if="'status' in book && book.status" class="book-card-status">
+        {{ getStatusLabel(book.status) }}
+      </div>
     </div>
   </div>
 </template>
@@ -36,10 +47,12 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
+import { useBookImage } from '@/composables/useBookImage';
 import type { Book } from '~~/types/books';
+import type { BookmarkedBook } from '@/composables/useBookmarks';
 
 interface Props {
-  book: Book;
+  book: Book | BookmarkedBook;
   showBookmark?: boolean;
 }
 
@@ -52,13 +65,41 @@ const emit = defineEmits<{
 }>();
 
 const { addBookmark, removeBookmark, isBookmarked } = useBookmarks();
+const { getHighQualityImageUrl, getImageDimensions } = useBookImage();
 
 const imageError = ref(false);
+const imageLoaded = ref(false);
+const imageDimensions = getImageDimensions('medium');
+
+function getOptimizedImageUrl() {
+  const imageUrl = props.book.cover || props.book.thumbnail;
+  // Don't modify the URL too aggressively - just ensure HTTPS
+  return imageUrl ? imageUrl.replace('http://', 'https://') : '';
+}
 
 const isBookmarkedValue = computed(() => isBookmarked(props.book.id));
 
-function handleImageError() {
+const statusLabels: Record<BookStatus, string> = {
+  reading: '📖 Читаю',
+  planned: '📝 В планах',
+  finished: '✅ Прочитано',
+  shelved: '⏸️ Отложено',
+  dropped: '❌ Брошено',
+  favourite: '💖 Любимые',
+};
+
+function getStatusLabel(status: BookStatus): string {
+  return statusLabels[status] || status;
+}
+
+function handleImageError(event: Event) {
+  console.error('Image failed to load:', (event.target as HTMLImageElement).src);
   imageError.value = true;
+  imageLoaded.value = true; // Hide skeleton
+}
+
+function handleImageLoad() {
+  imageLoaded.value = true;
 }
 
 function handleClick() {
@@ -106,22 +147,72 @@ function handleBookmarkClick() {
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+}
+
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.image-skeleton.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .book-card-image img {
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 2;
 }
 
 .book-card-placeholder {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, #e2e8f0 0%, #f7fafc 100%);
+  color: #718096;
+  position: relative;
+}
+
+.placeholder-icon {
   font-size: 32px;
-  color: #cbd5e0;
+  margin-bottom: 4px;
+}
+
+.placeholder-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: #4a5568;
 }
 
 .book-card-content {
@@ -207,6 +298,18 @@ function handleBookmarkClick() {
 .book-card-rating span {
   color: #718096;
   font-size: 10px;
+}
+
+.book-card-status {
+  margin-top: auto;
+  font-size: 11px;
+  color: #667eea;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: #f0f4ff;
+  border-radius: 6px;
+  text-align: center;
+  white-space: nowrap;
 }
 </style>
 

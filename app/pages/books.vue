@@ -61,49 +61,57 @@
 
       <div v-else-if="books && books.length > 0" class="books-grid">
         <div v-for="book in books" :key="book.id" class="book-card">
-          <div class="book-cover">
-            <img
-              v-if="book.thumbnail"
-              :src="book.thumbnail"
-              :alt="book.title"
-              loading="lazy"
-            />
-            <div v-else class="no-cover">📖</div>
-          </div>
-          
-          <div class="book-info">
-            <h3 class="book-title">{{ book.title }}</h3>
-            <p v-if="book.subtitle" class="book-subtitle">{{ book.subtitle }}</p>
-            <p class="book-authors">{{ book.authors.join(', ') || 'Автор неизвестен' }}</p>
+          <div class="book-card-content">
+            <div class="book-cover">
+              <div v-if="book.cover || book.thumbnail" class="image-container">
+                <div class="image-skeleton" :class="{ 'loaded': imageLoadStates[book.id] }"></div>
+                <img
+                  :src="getHighQualityImageUrl(book)"
+                  :alt="book.title"
+                  loading="lazy"
+                  class="book-cover-image"
+                  @load="handleImageLoad(book.id)"
+                  @error="handleImageError(book.id)"
+                />
+              </div>
+              <div v-else class="no-cover">📖</div>
+            </div>
             
-            <div v-if="book.rating" class="book-rating">
-              ⭐ {{ book.rating }} ({{ book.ratingsCount }} отзывов)
+            <div class="book-info">
+              <h3 class="book-title">{{ book.title }}</h3>
+              <p v-if="book.subtitle" class="book-subtitle">{{ book.subtitle }}</p>
+              <p class="book-authors">{{ book.authors.join(', ') || 'Автор неизвестен' }}</p>
+              
+              <div v-if="book.rating" class="book-rating">
+                ⭐ {{ book.rating }} ({{ book.ratingsCount }} отзывов)
+              </div>
+
+              <p v-if="book.description" class="book-description">
+                {{ truncateText(book.description, 200) }}
+              </p>
+
+              <div class="book-meta">
+                <span v-if="book.publishedDate" class="meta-item">
+                  📅 {{ book.publishedDate }}
+                </span>
+                <span v-if="book.pageCount" class="meta-item">
+                  📄 {{ book.pageCount }} стр.
+                </span>
+              </div>
+
+              <div class="book-categories">
+                <span
+                  v-for="cat in book.categories.slice(0, 3)"
+                  :key="cat"
+                  class="category-tag"
+                >
+                  {{ cat }}
+                </span>
+              </div>
             </div>
+          </div>
 
-            <p v-if="book.description" class="book-description">
-              {{ truncateText(book.description, 150) }}
-            </p>
-
-            <div class="book-meta">
-              <span v-if="book.publishedDate" class="meta-item">
-                📅 {{ book.publishedDate }}
-              </span>
-              <span v-if="book.pageCount" class="meta-item">
-                📄 {{ book.pageCount }} стр.
-              </span>
-            </div>
-
-            <div class="book-categories">
-              <span
-                v-for="cat in book.categories.slice(0, 3)"
-                :key="cat"
-                class="category-tag"
-              >
-                {{ cat }}
-              </span>
-            </div>
-
-            <div class="book-actions">
+          <div class="book-actions">
               <button
                 v-if="isBookmarked(book.id)"
                 class="btn-bookmark active"
@@ -151,7 +159,6 @@
               >
                 ℹ️ Подробнее
               </a>
-            </div>
           </div>
         </div>
       </div>
@@ -221,6 +228,9 @@ const {
 
 const showBookmarkMenu = ref<string | null>(null);
 
+// Track image loading states
+const imageLoadStates = ref<Record<string, boolean>>({});
+
 const statusOptions = [
   { value: 'reading' as BookStatus, label: 'Читаю', emoji: '📖' },
   { value: 'planned' as BookStatus, label: 'В планах', emoji: '📝' },
@@ -235,10 +245,49 @@ const handleAddBookmark = (book: Book, status: BookStatus) => {
   showBookmarkMenu.value = null;
 };
 
+// Optimize Google Books image URL for higher quality
+const getHighQualityImageUrl = (book: Book): string => {
+  const imageUrl = book.cover || book.thumbnail;
+  if (!imageUrl) return '';
+  
+  let url = imageUrl;
+  
+  // For Google Books images, we can add parameters for better quality
+  if (url.includes('books.google.com') || url.includes('googleusercontent.com')) {
+    // Remove any existing zoom parameter
+    url = url.replace(/&zoom=\d/, '');
+    // Add high zoom level
+    url += '&zoom=2';
+    
+    // Remove edge curl effect if present
+    url = url.replace('&edge=curl', '');
+    
+    // Add printsec parameter for better quality
+    if (!url.includes('printsec=')) {
+      url += '&printsec=frontcover';
+    }
+    
+    // Add img=1 parameter
+    if (!url.includes('img=')) {
+      url += '&img=1';
+    }
+  }
+  
+  return url;
+};
+
 const handleRemoveBookmark = (book: Book) => {
   if (confirm('Удалить книгу из закладок?')) {
     removeBookmark(book.id);
   }
+};
+
+const handleImageLoad = (bookId: string) => {
+  imageLoadStates.value[bookId] = true;
+};
+
+const handleImageError = (bookId: string) => {
+  imageLoadStates.value[bookId] = true; // Hide skeleton even on error
 };
 
 // Закрываем меню при клике вне его
@@ -457,55 +506,113 @@ const truncateText = (text: string, maxLength: number) => {
 
 .books-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+  gap: 32px;
   margin-bottom: 32px;
 }
 
 .book-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.book-card-content {
+  display: flex;
+  flex-direction: row;
+  padding: 24px;
+  gap: 24px;
+  flex: 1;
 }
 
 .book-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
 }
 
 .book-cover {
-  height: 200px;
+  width: 200px;
+  height: 300px;
   background: #f7fafc;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+  position: relative;
 }
 
-.book-cover img {
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 12px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.image-skeleton.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.book-cover-image {
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  z-index: 2;
+}
+
+.book-card:hover .book-cover-image {
+  transform: scale(1.05);
 }
 
 .no-cover {
   font-size: 64px;
+  color: #cbd5e0;
 }
 
 .book-info {
-  padding: 20px;
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-width: 0;
 }
 
 .book-title {
   margin: 0;
-  font-size: 18px;
+  font-size: 24px;
   font-weight: 700;
   color: #1a202c;
   line-height: 1.3;
@@ -513,28 +620,28 @@ const truncateText = (text: string, maxLength: number) => {
 
 .book-subtitle {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   color: #718096;
   font-style: italic;
 }
 
 .book-authors {
   margin: 0;
-  font-size: 14px;
+  font-size: 16px;
   color: #4a5568;
   font-weight: 600;
 }
 
 .book-rating {
-  font-size: 14px;
+  font-size: 16px;
   color: #d69e2e;
 }
 
 .book-description {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   color: #718096;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 .book-meta {
@@ -564,9 +671,11 @@ const truncateText = (text: string, maxLength: number) => {
 
 .book-actions {
   display: flex;
-  gap: 8px;
-  margin-top: auto;
-  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+  justify-content: center;
   position: relative;
 }
 
@@ -637,15 +746,14 @@ const truncateText = (text: string, maxLength: number) => {
 
 .btn-preview,
 .btn-info {
-  flex: 1;
-  padding: 10px;
+  padding: 12px 24px;
   text-align: center;
   text-decoration: none;
-  border-radius: 8px;
-  font-size: 13px;
+  border-radius: 10px;
+  font-size: 14px;
   font-weight: 600;
   transition: all 0.2s;
-  min-width: 120px;
+  min-width: 140px;
 }
 
 .btn-preview {
@@ -780,6 +888,34 @@ const truncateText = (text: string, maxLength: number) => {
 
   .search-box {
     flex-direction: column;
+  }
+  
+  .books-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .book-card-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px;
+  }
+  
+  .book-cover {
+    width: 150px;
+    height: 225px;
+  }
+  
+  .book-actions {
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+  }
+  
+  .book-actions > * {
+    width: 100%;
+    min-width: unset;
   }
 
   .filters {

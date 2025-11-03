@@ -4,9 +4,7 @@
       <header class="page-header">
         <h1>👤 Мой профиль</h1>
         <div class="header-actions">
-          <NuxtLink to="/" class="btn-home">
-            🏠 На главную
-          </NuxtLink>
+          <NuxtLink to="/" class="btn-home"> 🏠 На главную </NuxtLink>
           <button class="btn-logout" @click="handleLogout">Выйти</button>
         </div>
       </header>
@@ -57,77 +55,95 @@
           </div>
           <!-- Панель содержимого -->
           <div class="tab-panel" role="tabpanel">
-            <div v-if="booksForCurrentTab.length === 0" class="empty-state">
-              <h4 class="empty-title">{{ currentTabTitle }}</h4>
-              <p class="empty-text">
-                Здесь будут книги из категории «{{ currentTabTitle }}».
-              </p>
-              <p class="empty-hint">
-                Добавляйте книги в закладки со страницы <NuxtLink to="/books">поиска книг</NuxtLink>.
-              </p>
+            <div v-show="booksForCurrentTab.length === 0" class="empty-state">
+              <div class="empty-state">
+                <h4 class="empty-title">{{ currentTabTitle }}</h4>
+                <p class="empty-text">
+                  Здесь будут книги из категории «{{ currentTabTitle }}».
+                </p>
+                <p class="empty-hint">
+                  Добавляйте книги в закладки со страницы
+                  <NuxtLink to="/books">поиска книг</NuxtLink>.
+                </p>
+              </div>
             </div>
-            <div v-else class="bookmarks-grid">
+            <div v-show="booksForCurrentTab.length" class="bookmarks-grid">
               <div
                 v-for="book in booksForCurrentTab"
                 :key="book.id"
                 class="bookmark-card"
               >
-                <div class="bookmark-cover">
-                  <img
-                    v-if="book.thumbnail"
-                    :src="book.thumbnail"
-                    :alt="book.title"
-                  />
-                  <div v-else class="no-cover">📖</div>
+                <div class="bookmark-card-content">
+                  <div class="bookmark-cover">
+                    <div
+                      v-if="book.cover || book.thumbnail"
+                      class="image-container"
+                    >
+                      <div
+                        class="image-skeleton"
+                        :class="{ loaded: imageLoadStates[book.id] }"
+                      ></div>
+                      <img
+                        :src="getHighQualityImageUrl(book)"
+                        :alt="book.title"
+                        class="bookmark-cover-image"
+                        @load="handleImageLoad(book.id)"
+                        @error="handleImageError(book.id)"
+                      />
+                    </div>
+                    <div v-else class="no-cover">📖</div>
+                  </div>
+                  <div class="bookmark-info">
+                    <h4 class="bookmark-title">{{ book.title }}</h4>
+                    <p v-if="book.subtitle" class="bookmark-subtitle">
+                      {{ book.subtitle }}
+                    </p>
+                    <p class="bookmark-authors">
+                      {{ book.authors.join(", ") || "Автор неизвестен" }}
+                    </p>
+                    <div v-if="book.rating" class="bookmark-rating">
+                      ⭐ {{ book.rating }} ({{ book.ratingsCount }} отзывов)
+                    </div>
+                    <div class="bookmark-meta">
+                      <span v-if="book.publishedDate" class="meta-item">
+                        📅 {{ book.publishedDate }}
+                      </span>
+                      <span v-if="book.pageCount" class="meta-item">
+                        📄 {{ book.pageCount }} стр.
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div class="bookmark-info">
-                  <h4 class="bookmark-title">{{ book.title }}</h4>
-                  <p v-if="book.subtitle" class="bookmark-subtitle">{{ book.subtitle }}</p>
-                  <p class="bookmark-authors">
-                    {{ book.authors.join(', ') || 'Автор неизвестен' }}
-                  </p>
-                  <div v-if="book.rating" class="bookmark-rating">
-                    ⭐ {{ book.rating }} ({{ book.ratingsCount }} отзывов)
-                  </div>
-                  <div class="bookmark-meta">
-                    <span v-if="book.publishedDate" class="meta-item">
-                      📅 {{ book.publishedDate }}
-                    </span>
-                    <span v-if="book.pageCount" class="meta-item">
-                      📄 {{ book.pageCount }} стр.
-                    </span>
-                  </div>
-                  <div class="bookmark-actions">
-                    <select
-                      :value="book.status"
-                      class="status-select"
-                      @change="handleStatusChange(book.id, $event)"
+                <div class="bookmark-actions">
+                  <select
+                    :value="book.status"
+                    class="status-select"
+                    @change="handleStatusChange(book.id, $event)"
+                  >
+                    <option
+                      v-for="tab in bookTabs"
+                      :key="tab.key"
+                      :value="tab.key"
                     >
-                      <option
-                        v-for="tab in bookTabs"
-                        :key="tab.key"
-                        :value="tab.key"
-                      >
-                        {{ tab.label }}
-                      </option>
-                    </select>
-                    <button
-                      class="btn-remove-bookmark"
-                      @click="handleRemoveBookmark(book.id)"
-                      title="Удалить из закладок"
-                    >
-                      🗑️
-                    </button>
-                    <a
-                      v-if="book.infoLink"
-                      :href="book.infoLink"
-                      target="_blank"
-                      class="btn-book-info"
-                      title="Подробнее"
-                    >
-                      ℹ️
-                    </a>
-                  </div>
+                      {{ tab.label }}
+                    </option>
+                  </select>
+                  <button
+                    class="btn-remove-bookmark"
+                    title="Удалить из закладок"
+                    @click="handleRemoveBookmark(book.id)"
+                  >
+                    🗑️
+                  </button>
+                  <a
+                    v-if="book.infoLink"
+                    :href="book.infoLink"
+                    target="_blank"
+                    class="btn-book-info"
+                    title="Подробнее"
+                  >
+                    ℹ️
+                  </a>
                 </div>
               </div>
             </div>
@@ -249,7 +265,7 @@
         </div>
 
         <!-- Режим просмотра -->
-        <div v-else class="view-section" style="margin-top: 40px;">
+        <div v-else class="view-section" style="margin-top: 40px">
           <div class="info-section">
             <div class="section-header">
               <h3>📋 Профиль и настройки</h3>
@@ -306,7 +322,7 @@
 </template>
 
 <script setup lang="ts">
-import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
+import { useBookmarks, type BookStatus } from "@/composables/useBookmarks";
 
 definePageMeta({
   middleware: "auth",
@@ -314,11 +330,7 @@ definePageMeta({
 
 const { logout } = useAuth();
 const { fetchProfile, updateProfile } = useProfile();
-const {
-  getBooksByStatus,
-  updateBookStatus,
-  removeBookmark,
-} = useBookmarks();
+const { getBooksByStatus, updateBookStatus, removeBookmark } = useBookmarks();
 
 // SEO
 useHead({
@@ -369,18 +381,23 @@ type BookTabKey =
   | "favourite";
 
 const bookTabs: { key: BookTabKey; label: string }[] = [
-  { key: "reading",   label: "📖 Читаю" },
-  { key: "planned",   label: "📝 В планах" },
-  { key: "finished",  label: "✅ Прочитано" },
-  { key: "shelved",   label: "⏸️ Отложено" },
-  { key: "dropped",   label: "❌ Брошено" },
+  { key: "reading", label: "📖 Читаю" },
+  { key: "planned", label: "📝 В планах" },
+  { key: "finished", label: "✅ Прочитано" },
+  { key: "shelved", label: "⏸️ Отложено" },
+  { key: "dropped", label: "❌ Брошено" },
   { key: "favourite", label: "💖 Любимые" },
 ];
 
 const activeBookTab = ref<BookTabKey>("reading");
 
+// Track image loading states
+const imageLoadStates = ref<Record<string, boolean>>({});
+
 const currentTabTitle = computed(() => {
-  return bookTabs.find(t => t.key === activeBookTab.value)?.label ?? "Категория";
+  return (
+    bookTabs.find((t) => t.key === activeBookTab.value)?.label ?? "Категория"
+  );
 });
 
 // Книги для текущей вкладки
@@ -463,9 +480,51 @@ const handleStatusChange = (bookId: string, event: Event) => {
 };
 
 const handleRemoveBookmark = (bookId: string) => {
-  if (confirm('Удалить книгу из закладок?')) {
+  if (confirm("Удалить книгу из закладок?")) {
     removeBookmark(bookId);
   }
+};
+
+// Optimize Google Books image URL for higher quality
+const getHighQualityImageUrl = (book: any): string => {
+  const imageUrl = book.cover || book.thumbnail;
+  if (!imageUrl) return "";
+
+  let url = imageUrl;
+
+  // For Google Books images, we can add parameters for better quality
+  if (
+    url.includes("books.google.com") ||
+    url.includes("googleusercontent.com")
+  ) {
+    // Remove any existing zoom parameter
+    url = url.replace(/&zoom=\d/, "");
+    // Add high zoom level
+    url += "&zoom=2";
+
+    // Remove edge curl effect if present
+    url = url.replace("&edge=curl", "");
+
+    // Add printsec parameter for better quality
+    if (!url.includes("printsec=")) {
+      url += "&printsec=frontcover";
+    }
+
+    // Add img=1 parameter
+    if (!url.includes("img=")) {
+      url += "&img=1";
+    }
+  }
+
+  return url;
+};
+
+const handleImageLoad = (bookId: string) => {
+  imageLoadStates.value[bookId] = true;
+};
+
+const handleImageError = (bookId: string) => {
+  imageLoadStates.value[bookId] = true; // Hide skeleton even on error
 };
 
 const addGenreSuggestion = (genre: string) => {
@@ -966,7 +1025,6 @@ const handleSave = async () => {
   background: #f7fafc;
 }
 
-
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
@@ -1142,18 +1200,29 @@ const handleSave = async () => {
 
 .bookmarks-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
 }
 
 .bookmark-card {
-  background: #f7fafc;
+  background: white;
   border: 2px solid #e2e8f0;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   display: flex;
   flex-direction: column;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.bookmark-card-content {
+  display: flex;
+  flex-direction: row;
+  padding: 8px;
+  gap: 8px;
+  flex: 1;
 }
 
 .bookmark-card:hover {
@@ -1162,86 +1231,148 @@ const handleSave = async () => {
 }
 
 .bookmark-cover {
-  height: 200px;
-  background: #edf2f7;
+  width: 66px;
+  height: 100px;
+  background: #f7fafc;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  border-radius: 4px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  flex-shrink: 0;
+  position: relative;
 }
 
-.bookmark-cover img {
+.image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.image-skeleton {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 4px;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+
+.image-skeleton.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.bookmark-cover-image {
+  position: relative;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  z-index: 2;
+}
+
+.bookmark-card:hover .bookmark-cover-image {
+  transform: scale(1.05);
 }
 
 .bookmark-cover .no-cover {
-  font-size: 64px;
+  font-size: 22px;
+  color: #cbd5e0;
 }
 
 .bookmark-info {
-  padding: 16px;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  min-width: 0;
 }
 
 .bookmark-title {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #1a202c;
   line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .bookmark-subtitle {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #718096;
   font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bookmark-authors {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #4a5568;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bookmark-rating {
-  font-size: 12px;
+  font-size: 11px;
   color: #d69e2e;
 }
 
 .bookmark-meta {
   display: flex;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
-  font-size: 11px;
+  font-size: 10px;
   color: #718096;
 }
 
 .bookmark-actions {
   display: flex;
-  gap: 8px;
-  margin-top: auto;
-  padding-top: 12px;
+  gap: 6px;
+  padding: 8px;
+  background: #f7fafc;
   border-top: 1px solid #e2e8f0;
+  justify-content: center;
+  position: relative;
 }
 
 .status-select {
-  flex: 1;
-  padding: 8px 12px;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
-  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #667eea;
+  border-radius: 6px;
+  font-size: 11px;
   font-weight: 600;
   background: white;
-  color: #1a202c;
+  color: #667eea;
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
+  flex: 1;
 }
 
 .status-select:hover {
@@ -1255,32 +1386,44 @@ const handleSave = async () => {
 
 .btn-remove-bookmark,
 .btn-book-info {
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
   background: white;
-  color: #718096;
-  font-size: 16px;
+  color: #1a202c;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-remove-bookmark {
+  background: #fc8181;
+  color: white;
+  border-color: #fc8181;
 }
 
 .btn-remove-bookmark:hover {
-  border-color: #fc8181;
-  background: #fed7d7;
-  color: #c53030;
+  background: #f56565;
+  border-color: #f56565;
+  transform: translateY(-1px);
+}
+
+.btn-book-info {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
 }
 
 .btn-book-info:hover {
-  border-color: #667eea;
-  background: #edf2f7;
-  color: #667eea;
+  background: #5568d3;
+  border-color: #5568d3;
+  transform: translateY(-1px);
 }
 
 .books-section .chips {
@@ -1311,12 +1454,26 @@ const handleSave = async () => {
   }
   .bookmarks-grid {
     grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .bookmark-card-content {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 8px;
+  }
+  .bookmark-cover {
+    width: 80px;
+    height: 120px;
   }
   .bookmark-actions {
-    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 6px;
+    padding: 8px;
   }
-  .status-select {
+  .bookmark-actions > * {
     width: 100%;
+    min-width: unset;
   }
 }
 </style>

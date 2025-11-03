@@ -19,9 +19,10 @@ export function parseGoogleBook(volume: GoogleBookVolume): Book {
     rating: volumeInfo.averageRating,
     ratingsCount: volumeInfo.ratingsCount,
     thumbnail: volumeInfo.imageLinks?.thumbnail?.replace('http://', 'https://'),
-    cover: volumeInfo.imageLinks?.large || 
-           volumeInfo.imageLinks?.medium || 
-           volumeInfo.imageLinks?.small ||
+    cover: volumeInfo.imageLinks?.extraLarge?.replace('http://', 'https://') || 
+           volumeInfo.imageLinks?.large?.replace('http://', 'https://') || 
+           volumeInfo.imageLinks?.medium?.replace('http://', 'https://') || 
+           volumeInfo.imageLinks?.small?.replace('http://', 'https://') ||
            volumeInfo.imageLinks?.thumbnail?.replace('http://', 'https://'),
     language: volumeInfo.language,
     previewLink: volumeInfo.previewLink,
