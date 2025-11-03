@@ -2,19 +2,15 @@
   <div class="bookmarks-preview">
     <div class="bookmarks-header">
       <h2 class="bookmarks-title">📖 Мои закладки</h2>
-      <NuxtLink to="/profile" class="bookmarks-link">
-        Все закладки →
-      </NuxtLink>
+      <NuxtLink to="/profile" class="bookmarks-link"> Все закладки → </NuxtLink>
     </div>
 
-    <div v-if="allBookmarks.length === 0" class="bookmarks-empty">
+    <div v-show="allBookmarks.length === 0" class="bookmarks-empty">
       <p>У вас пока нет закладок</p>
-      <NuxtLink to="/books" class="empty-link">
-        🔍 Найти книги
-      </NuxtLink>
+      <NuxtLink to="/books" class="empty-link"> 🔍 Найти книги </NuxtLink>
     </div>
 
-    <div v-else class="bookmarks-grid">
+    <div v-show="allBookmarks.length" class="bookmarks-grid">
       <BookCard
         v-for="book in displayedBookmarks"
         :key="book.id"
@@ -27,10 +23,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
-import type { BookmarkedBook } from '@/composables/useBookmarks';
-import BookCard from '@/components/BookCard.vue';
+import { computed } from "vue";
+import { useBookmarks, type BookStatus } from "@/composables/useBookmarks";
+import type { BookmarkedBook } from "@/composables/useBookmarks";
+import BookCard from "@/components/BookCard.vue";
 
 const { getAllBookmarks } = useBookmarks();
 
@@ -39,17 +35,20 @@ const allBookmarks = computed(() => getAllBookmarks());
 // Показываем только последние 6 книг
 const displayedBookmarks = computed(() => {
   return allBookmarks.value
-    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+    )
     .slice(0, 6);
 });
 
 const statusLabels: Record<BookStatus, string> = {
-  reading: '📖 Читаю',
-  planned: '📝 В планах',
-  finished: '✅ Прочитано',
-  shelved: '⏸️ Отложено',
-  dropped: '❌ Брошено',
-  favourite: '💖 Любимые',
+  reading: "📖 Читаю",
+  planned: "📝 В планах",
+  finished: "✅ Прочитано",
+  shelved: "⏸️ Отложено",
+  dropped: "❌ Брошено",
+  favourite: "💖 Любимые",
 };
 
 function getStatusLabel(status: BookStatus): string {
@@ -58,9 +57,9 @@ function getStatusLabel(status: BookStatus): string {
 
 function handleBookClick(book: BookmarkedBook) {
   if (book.infoLink) {
-    window.open(book.infoLink, '_blank');
+    window.open(book.infoLink, "_blank");
   } else if (book.previewLink) {
-    window.open(book.previewLink, '_blank');
+    window.open(book.previewLink, "_blank");
   }
 }
 </script>
@@ -152,4 +151,3 @@ function handleBookClick(book: BookmarkedBook) {
   }
 }
 </style>
-

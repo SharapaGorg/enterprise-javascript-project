@@ -4,9 +4,7 @@
       <header class="page-header">
         <h1>👤 Мой профиль</h1>
         <div class="header-actions">
-          <NuxtLink to="/" class="btn-home">
-            🏠 На главную
-          </NuxtLink>
+          <NuxtLink to="/" class="btn-home"> 🏠 На главную </NuxtLink>
           <button class="btn-logout" @click="handleLogout">Выйти</button>
         </div>
       </header>
@@ -57,16 +55,19 @@
           </div>
           <!-- Панель содержимого -->
           <div class="tab-panel" role="tabpanel">
-            <div v-if="booksForCurrentTab.length === 0" class="empty-state">
-              <h4 class="empty-title">{{ currentTabTitle }}</h4>
-              <p class="empty-text">
-                Здесь будут книги из категории «{{ currentTabTitle }}».
-              </p>
-              <p class="empty-hint">
-                Добавляйте книги в закладки со страницы <NuxtLink to="/books">поиска книг</NuxtLink>.
-              </p>
+            <div v-show="booksForCurrentTab.length === 0" class="empty-state">
+              <div class="empty-state">
+                <h4 class="empty-title">{{ currentTabTitle }}</h4>
+                <p class="empty-text">
+                  Здесь будут книги из категории «{{ currentTabTitle }}».
+                </p>
+                <p class="empty-hint">
+                  Добавляйте книги в закладки со страницы
+                  <NuxtLink to="/books">поиска книг</NuxtLink>.
+                </p>
+              </div>
             </div>
-            <div v-else class="bookmarks-grid">
+            <div v-show="booksForCurrentTab.length" class="bookmarks-grid">
               <div
                 v-for="book in booksForCurrentTab"
                 :key="book.id"
@@ -74,8 +75,14 @@
               >
                 <div class="bookmark-card-content">
                   <div class="bookmark-cover">
-                    <div v-if="book.cover || book.thumbnail" class="image-container">
-                      <div class="image-skeleton" :class="{ 'loaded': imageLoadStates[book.id] }"></div>
+                    <div
+                      v-if="book.cover || book.thumbnail"
+                      class="image-container"
+                    >
+                      <div
+                        class="image-skeleton"
+                        :class="{ loaded: imageLoadStates[book.id] }"
+                      ></div>
                       <img
                         :src="getHighQualityImageUrl(book)"
                         :alt="book.title"
@@ -88,9 +95,11 @@
                   </div>
                   <div class="bookmark-info">
                     <h4 class="bookmark-title">{{ book.title }}</h4>
-                    <p v-if="book.subtitle" class="bookmark-subtitle">{{ book.subtitle }}</p>
+                    <p v-if="book.subtitle" class="bookmark-subtitle">
+                      {{ book.subtitle }}
+                    </p>
                     <p class="bookmark-authors">
-                      {{ book.authors.join(', ') || 'Автор неизвестен' }}
+                      {{ book.authors.join(", ") || "Автор неизвестен" }}
                     </p>
                     <div v-if="book.rating" class="bookmark-rating">
                       ⭐ {{ book.rating }} ({{ book.ratingsCount }} отзывов)
@@ -121,8 +130,8 @@
                   </select>
                   <button
                     class="btn-remove-bookmark"
-                    @click="handleRemoveBookmark(book.id)"
                     title="Удалить из закладок"
+                    @click="handleRemoveBookmark(book.id)"
                   >
                     🗑️
                   </button>
@@ -256,7 +265,7 @@
         </div>
 
         <!-- Режим просмотра -->
-        <div v-else class="view-section" style="margin-top: 40px;">
+        <div v-else class="view-section" style="margin-top: 40px">
           <div class="info-section">
             <div class="section-header">
               <h3>📋 Профиль и настройки</h3>
@@ -313,7 +322,7 @@
 </template>
 
 <script setup lang="ts">
-import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
+import { useBookmarks, type BookStatus } from "@/composables/useBookmarks";
 
 definePageMeta({
   middleware: "auth",
@@ -321,11 +330,7 @@ definePageMeta({
 
 const { logout } = useAuth();
 const { fetchProfile, updateProfile } = useProfile();
-const {
-  getBooksByStatus,
-  updateBookStatus,
-  removeBookmark,
-} = useBookmarks();
+const { getBooksByStatus, updateBookStatus, removeBookmark } = useBookmarks();
 
 // SEO
 useHead({
@@ -376,11 +381,11 @@ type BookTabKey =
   | "favourite";
 
 const bookTabs: { key: BookTabKey; label: string }[] = [
-  { key: "reading",   label: "📖 Читаю" },
-  { key: "planned",   label: "📝 В планах" },
-  { key: "finished",  label: "✅ Прочитано" },
-  { key: "shelved",   label: "⏸️ Отложено" },
-  { key: "dropped",   label: "❌ Брошено" },
+  { key: "reading", label: "📖 Читаю" },
+  { key: "planned", label: "📝 В планах" },
+  { key: "finished", label: "✅ Прочитано" },
+  { key: "shelved", label: "⏸️ Отложено" },
+  { key: "dropped", label: "❌ Брошено" },
   { key: "favourite", label: "💖 Любимые" },
 ];
 
@@ -390,7 +395,9 @@ const activeBookTab = ref<BookTabKey>("reading");
 const imageLoadStates = ref<Record<string, boolean>>({});
 
 const currentTabTitle = computed(() => {
-  return bookTabs.find(t => t.key === activeBookTab.value)?.label ?? "Категория";
+  return (
+    bookTabs.find((t) => t.key === activeBookTab.value)?.label ?? "Категория"
+  );
 });
 
 // Книги для текущей вкладки
@@ -473,7 +480,7 @@ const handleStatusChange = (bookId: string, event: Event) => {
 };
 
 const handleRemoveBookmark = (bookId: string) => {
-  if (confirm('Удалить книгу из закладок?')) {
+  if (confirm("Удалить книгу из закладок?")) {
     removeBookmark(bookId);
   }
 };
@@ -481,31 +488,34 @@ const handleRemoveBookmark = (bookId: string) => {
 // Optimize Google Books image URL for higher quality
 const getHighQualityImageUrl = (book: any): string => {
   const imageUrl = book.cover || book.thumbnail;
-  if (!imageUrl) return '';
-  
+  if (!imageUrl) return "";
+
   let url = imageUrl;
-  
+
   // For Google Books images, we can add parameters for better quality
-  if (url.includes('books.google.com') || url.includes('googleusercontent.com')) {
+  if (
+    url.includes("books.google.com") ||
+    url.includes("googleusercontent.com")
+  ) {
     // Remove any existing zoom parameter
-    url = url.replace(/&zoom=\d/, '');
+    url = url.replace(/&zoom=\d/, "");
     // Add high zoom level
-    url += '&zoom=2';
-    
+    url += "&zoom=2";
+
     // Remove edge curl effect if present
-    url = url.replace('&edge=curl', '');
-    
+    url = url.replace("&edge=curl", "");
+
     // Add printsec parameter for better quality
-    if (!url.includes('printsec=')) {
-      url += '&printsec=frontcover';
+    if (!url.includes("printsec=")) {
+      url += "&printsec=frontcover";
     }
-    
+
     // Add img=1 parameter
-    if (!url.includes('img=')) {
-      url += '&img=1';
+    if (!url.includes("img=")) {
+      url += "&img=1";
     }
   }
-  
+
   return url;
 };
 
@@ -1015,7 +1025,6 @@ const handleSave = async () => {
   background: #f7fafc;
 }
 
-
 @media (max-width: 768px) {
   .page-header {
     flex-direction: column;
@@ -1200,7 +1209,9 @@ const handleSave = async () => {
   border: 2px solid #e2e8f0;
   border-radius: 16px;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);

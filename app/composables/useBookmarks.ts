@@ -27,17 +27,29 @@ export const useBookmarks = () => {
     return user.value ? `${key}_${user.value.id}` : key;
   };
 
-  // Загрузка закладок из localStorage
-  if (process.client) {
-    try {
-      const savedBookmarks = localStorage.getItem(getStorageKey(STORAGE_KEY_BOOKMARKS));
-      if (savedBookmarks) {
-        bookmarks.value = JSON.parse(savedBookmarks);
+  // Функция загрузки закладок из localStorage
+  const loadBookmarks = () => {
+    if (process.client && user.value) {
+      try {
+        const savedBookmarks = localStorage.getItem(getStorageKey(STORAGE_KEY_BOOKMARKS));
+        if (savedBookmarks) {
+          bookmarks.value = JSON.parse(savedBookmarks);
+        }
+      } catch (e) {
+        console.error('Ошибка при загрузке закладок:', e);
       }
-    } catch (e) {
-      console.error('Ошибка при загрузке закладок:', e);
     }
-  }
+  };
+
+  // Загрузка закладок при инициализации
+  loadBookmarks();
+
+  // Перезагрузка закладок когда пользователь становится доступным
+  watch(user, (newUser, oldUser) => {
+    if (newUser && !oldUser) {
+      loadBookmarks();
+    }
+  }, { immediate: false });
 
   // Сохранение закладок в localStorage
   const saveBookmarks = () => {
