@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
+    "build": "vite build --config vite.microfrontend.config.js",
+    "build:nuxt": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -20,6 +21,8 @@
     "@nuxt/image": "^1.11.0",
     "@nuxtjs/supabase": "^2.0.1",
     "nuxt": "^4.1.2",
+    "single-spa": "^6.0.3",
+    "single-spa-vue": "^3.0.1",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1"
   },
