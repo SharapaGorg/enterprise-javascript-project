@@ -143,14 +143,13 @@
                   </button>
                 </div>
               </div>
-              <a
+              <NuxtLink
                 v-if="book.previewLink"
-                :href="book.previewLink"
-                target="_blank"
+                :to="{ name: 'books-id', params: { id: book.id } }"
                 class="btn-preview"
               >
                 👁️ Предпросмотр
-              </a>
+              </NuxtLink>
               <a
                 v-if="book.infoLink"
                 :href="book.infoLink"
@@ -310,7 +309,7 @@ useHead({
   ],
 });
 
-// Поисковые параметры
+// Поисковые параметры    
 const searchQuery = ref('');
 const author = ref('');
 const category = ref('');
