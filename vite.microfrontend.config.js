@@ -7,9 +7,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: resolve(__dirname, 'single-spa-entry.js'),
-      external: ['vue', 'vue-router', 'single-spa'],
       output: {
-        format: 'system',
+        format: 'umd',
+        name: 'readmind',
         entryFileNames: 'index.js',
         chunkFileNames: '[name].js',
         assetFileNames: '[name][extname]',
@@ -18,7 +18,7 @@ export default defineConfig({
     },
     outDir: 'dist',
     emptyOutDir: true,
-    lib: false // Отключаем library mode
+    minify: false // Временно отключим для отладки
   },
   define: {
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
