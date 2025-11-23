@@ -3,7 +3,7 @@ import { createApp, h } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import * as composables from "./app/composables/";
 import App from "./app/MicrofrontendApp.vue";
-
+import { createClient } from "@supabase/supabase-js";
 // Импорт страниц
 import IndexPage from "./app/pages/index.vue";
 import BooksPage from "./app/pages/books.vue";
@@ -12,6 +12,29 @@ import LoginPage from "./app/pages/auth/login.vue";
 import RegisterPage from "./app/pages/auth/register.vue";
 import ProfilePage from "./app/pages/profile/index.vue";
 import OnboardingPage from "./app/pages/profile/onboarding.vue";
+
+const createSupabaseApp = (app) => {
+  const supabase = createClient(
+    "https://tvtzkvcfmawzcrfrjofd.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHprdmNmbWF3emNyZnJqb2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMjQyNjgsImV4cCI6MjA3NjgwMDI2OH0.HaLutY42f_aN_XQfu8TaztY-Ru19diwLb2rVaahw9jc",
+  );
+
+  // Mock Nuxt Supabase composables
+  window.useSupabaseClient = () => supabase;
+  window.useSupabaseUser = () => {
+    const user = ref(null);
+    supabase.auth.getUser().then(({ data }) => {
+      user.value = data.user;
+    });
+    supabase.auth.onAuthStateChange((event, session) => {
+      user.value = session?.user ?? null;
+    });
+    return user;
+  };
+
+  app.config.globalProperties.$useSupabaseClient = window.useSupabaseClient;
+  app.config.globalProperties.$useSupabaseUser = window.useSupabaseUser;
+};
 
 const createNuxtMocks = (app, router) => {
   // definePageMeta - просто заглушка, мета уже в routes
@@ -82,6 +105,7 @@ const vueLifecycles = singleSpaVue({
 
     app.use(router);
 
+    createSupabaseApp(app);
     createNuxtMocks(app, router);
 
     // Эмулируем некоторые Nuxt провайдеры для композаблов
