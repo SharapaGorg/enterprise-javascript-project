@@ -343,7 +343,7 @@ const searchParams = computed(() => ({
 
 const { data: booksData, pending, error, refresh } = searchBooks(searchParams);
 
-const books = computed(() => booksData.value?.books || []);
+const books = computed(() => booksData?.books || []);
 
 // Методы
 const handleSearch = () => {
