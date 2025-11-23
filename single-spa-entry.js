@@ -21,6 +21,8 @@ const routes = [
   { path: "/auth/register", component: RegisterPage },
   { path: "/profile", component: ProfilePage },
   { path: "/profile/onboarding", component: OnboardingPage },
+  // Redirect для несуществующих маршрутов
+  { path: "/:pathMatch(.*)*", redirect: "/" },
 ];
 
 const vueLifecycles = singleSpaVue({

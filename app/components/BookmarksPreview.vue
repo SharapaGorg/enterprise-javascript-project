@@ -2,12 +2,12 @@
   <div class="bookmarks-preview">
     <div class="bookmarks-header">
       <h2 class="bookmarks-title">📖 Мои закладки</h2>
-      <NuxtLink to="/profile" class="bookmarks-link"> Все закладки → </NuxtLink>
+      <RouterLink to="/profile" class="bookmarks-link"> Все закладки → </RouterLink>
     </div>
 
     <div v-show="allBookmarks.length === 0" class="bookmarks-empty">
       <p>У вас пока нет закладок</p>
-      <NuxtLink to="/books" class="empty-link"> 🔍 Найти книги </NuxtLink>
+      <RouterLink to="/books" class="empty-link"> 🔍 Найти книги </RouterLink>
     </div>
 
     <div v-show="allBookmarks.length" class="bookmarks-grid">
