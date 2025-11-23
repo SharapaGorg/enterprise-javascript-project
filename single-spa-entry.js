@@ -1,6 +1,7 @@
 import singleSpaVue from "single-spa-vue";
 import { createApp, h } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
+import * as composables from "./app/composables/";
 import App from "./app/MicrofrontendApp.vue";
 
 // Импорт страниц
@@ -43,6 +44,12 @@ const createNuxtMocks = (app, router) => {
   Object.keys(nuxtMocks).forEach((key) => {
     window[key] = nuxtMocks[key];
     app.config.globalProperties[`$${key}`] = nuxtMocks[key];
+  });
+
+  // делаем глобальными свои кастомные компосаблы
+  Object.assign(window, composables);
+  Object.keys(composables).forEach((key) => {
+    app.config.globalProperties[`$${key}`] = composables[key];
   });
 };
 
