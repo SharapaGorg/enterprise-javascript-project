@@ -8,7 +8,7 @@
       </p>
 
       <div class="error-actions">
-        <NuxtLink to="/read-mind-ai" class="btn-primary">На главную</NuxtLink>
+        <NuxtLink to="/" class="btn-primary">На главную</NuxtLink>
         <button class="btn-secondary" @click="handleError">
           Попробовать снова
         </button>

@@ -36,7 +36,7 @@
             </p>
           </div>
           <div class="header-actions">
-            <NuxtLink to="/read-mind-ai" class="btn-home" title="На главную">
+            <NuxtLink to="/" class="btn-home" title="На главную">
               🏠 Главная
             </NuxtLink>
             <button

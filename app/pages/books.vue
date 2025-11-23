@@ -4,7 +4,7 @@
       <header class="page-header">
         <h1>📚 Поиск книг</h1>
         <p class="subtitle">Поиск книг через Google Books API</p>
-        <NuxtLink to="/read-mind-ai" class="back-link">← На главную</NuxtLink>
+        <NuxtLink to="/" class="back-link">← На главную</NuxtLink>
       </header>
 
       <div class="search-section">
