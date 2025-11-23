@@ -90,5 +90,11 @@ export const unmount = (props = {}) => {
 
 // Экспортируем в глобальный объект для совместимости
 if (typeof window !== 'undefined') {
+  // Для UMD модуля
   window.ReadMindAI = { bootstrap, mount, unmount }
+  
+  // Для brojs - функции должны быть доступны глобально
+  window.bootstrap = bootstrap
+  window.mount = mount  
+  window.unmount = unmount
 }
