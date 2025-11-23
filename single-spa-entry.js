@@ -24,7 +24,7 @@ import {
 } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { createClient } from "@supabase/supabase-js";
-import * as composables from "./app/composables";
+import * as composables from "./composables";
 import App from "./app/MicrofrontendApp.vue";
 
 // Импорт страниц
@@ -48,24 +48,28 @@ const routes = [
   { path: "/:pathMatch(.*)*", redirect: "/" },
 ];
 
-const createNuxtMocks = (app, router) => {
-  // Supabase
-  const supabase = createClient(
-    "https://tvtzkvcfmawzcrfrjofd.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHprdmNmbWF3emNyZnJqb2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMjQyNjgsImV4cCI6MjA3NjgwMDI2OH0.HaLutY42f_aN_XQfu8TaztY-Ru19diwLb2rVaahw9jc",
-  );
+// Создаем Supabase один раз глобально
+const supabase = createClient(
+  "https://tvtzkvcfmawzcrfrjofd.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHprdmNmbWF3emNyZnJqb2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMjQyNjgsImV4cCI6MjA3NjgwMDI2OH0.HaLutY42f_aN_XQfu8TaztY-Ru19diwLb2rVaahw9jc",
+);
 
+// Глобальный user state
+const globalUser = ref(null);
+
+// Инициализируем пользователя сразу
+supabase.auth.getUser().then(({ data }) => {
+  globalUser.value = data.user;
+});
+
+supabase.auth.onAuthStateChange((event, session) => {
+  globalUser.value = session?.user ?? null;
+});
+
+const createNuxtMocks = (app, router) => {
+  // Supabase composables
   window.useSupabaseClient = () => supabase;
-  window.useSupabaseUser = () => {
-    const user = ref(null);
-    supabase.auth.getUser().then(({ data }) => {
-      user.value = data.user;
-    });
-    supabase.auth.onAuthStateChange((event, session) => {
-      user.value = session?.user ?? null;
-    });
-    return user;
-  };
+  window.useSupabaseUser = () => globalUser;
 
   // Vue API глобально
   const vueApi = {
@@ -134,14 +138,6 @@ const createNuxtMocks = (app, router) => {
 
   // Composables
   Object.assign(window, composables);
-
-  // Добавляем в глобальные свойства приложения
-  Object.keys(nuxtMocks).forEach((key) => {
-    app.config.globalProperties[`$${key}`] = nuxtMocks[key];
-  });
-  Object.keys(composables).forEach((key) => {
-    app.config.globalProperties[`$${key}`] = composables[key];
-  });
 
   app.provide("$router", router);
 };
