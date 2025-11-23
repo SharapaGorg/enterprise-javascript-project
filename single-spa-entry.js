@@ -12,6 +12,40 @@ import RegisterPage from "./app/pages/auth/register.vue";
 import ProfilePage from "./app/pages/profile/index.vue";
 import OnboardingPage from "./app/pages/profile/onboarding.vue";
 
+const createNuxtMocks = (app, router) => {
+  // definePageMeta - просто заглушка, мета уже в routes
+  app.config.globalProperties.definePageMeta = () => {};
+
+  // Глобальные функции для auto-import
+  const nuxtMocks = {
+    definePageMeta: () => {},
+    navigateTo: (to) => router.push(to),
+    useRoute: () => router.currentRoute.value,
+    useRouter: () => router,
+    useRuntimeConfig: () => ({
+      public: {
+        siteUrl: process.env.SITE_URL || "http://localhost:3000",
+        siteName: "ReadMind AI",
+      },
+    }),
+    useState: (key, init) => {
+      const state = app.config.globalProperties.$nuxtState || {};
+      if (!state[key] && init) state[key] = init();
+      app.config.globalProperties.$nuxtState = state;
+      return { value: state[key] };
+    },
+    useCookie: (name) => ({ value: null }), // заглушка
+    useHead: () => {},
+    useSeoMeta: () => {},
+  };
+
+  // Делаем их глобальными
+  Object.keys(nuxtMocks).forEach((key) => {
+    window[key] = nuxtMocks[key];
+    app.config.globalProperties[`$${key}`] = nuxtMocks[key];
+  });
+};
+
 // Определение маршрутов
 const routes = [
   { path: "/", component: IndexPage },
@@ -40,6 +74,8 @@ const vueLifecycles = singleSpaVue({
     });
 
     app.use(router);
+
+    createNuxtMocks();
 
     // Эмулируем некоторые Nuxt провайдеры для композаблов
     app.provide("$router", router);
