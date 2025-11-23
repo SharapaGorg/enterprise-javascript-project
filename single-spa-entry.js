@@ -1,5 +1,5 @@
 import singleSpaVue from "single-spa-vue";
-import { createApp, h } from "vue";
+import { createApp, h, ref } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import * as composables from "./app/composables/";
 import App from "./app/MicrofrontendApp.vue";
