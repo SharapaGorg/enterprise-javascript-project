@@ -1,9 +1,32 @@
 import singleSpaVue from "single-spa-vue";
-import { createApp, h, ref } from "vue";
+import {
+  createApp,
+  h,
+  ref,
+  computed,
+  watch,
+  watchEffect,
+  reactive,
+  readonly,
+  toRef,
+  toRefs,
+  unref,
+  isRef,
+  onMounted,
+  onUnmounted,
+  onBeforeMount,
+  onBeforeUnmount,
+  onUpdated,
+  onBeforeUpdate,
+  nextTick,
+  provide,
+  inject,
+} from "vue";
 import { createRouter, createWebHistory } from "vue-router";
-import * as composables from "./app/composables/";
-import App from "./app/MicrofrontendApp.vue";
 import { createClient } from "@supabase/supabase-js";
+import * as composables from "./composables";
+import App from "./app/MicrofrontendApp.vue";
+
 // Импорт страниц
 import IndexPage from "./app/pages/index.vue";
 import BooksPage from "./app/pages/books.vue";
@@ -13,13 +36,25 @@ import RegisterPage from "./app/pages/auth/register.vue";
 import ProfilePage from "./app/pages/profile/index.vue";
 import OnboardingPage from "./app/pages/profile/onboarding.vue";
 
-const createSupabaseApp = (app) => {
+// Определение маршрутов
+const routes = [
+  { path: "/", component: IndexPage },
+  { path: "/books", component: BooksPage },
+  { path: "/chat", component: ChatPage },
+  { path: "/auth/login", component: LoginPage },
+  { path: "/auth/register", component: RegisterPage },
+  { path: "/profile", component: ProfilePage },
+  { path: "/profile/onboarding", component: OnboardingPage },
+  { path: "/:pathMatch(.*)*", redirect: "/" },
+];
+
+const createNuxtMocks = (app, router) => {
+  // Supabase
   const supabase = createClient(
     "https://tvtzkvcfmawzcrfrjofd.supabase.co",
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2dHprdmNmbWF3emNyZnJqb2ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMjQyNjgsImV4cCI6MjA3NjgwMDI2OH0.HaLutY42f_aN_XQfu8TaztY-Ru19diwLb2rVaahw9jc",
   );
 
-  // Mock Nuxt Supabase composables
   window.useSupabaseClient = () => supabase;
   window.useSupabaseUser = () => {
     const user = ref(null);
@@ -32,20 +67,52 @@ const createSupabaseApp = (app) => {
     return user;
   };
 
-  app.config.globalProperties.$useSupabaseClient = window.useSupabaseClient;
-  app.config.globalProperties.$useSupabaseUser = window.useSupabaseUser;
-};
+  // Vue API глобально
+  const vueApi = {
+    ref,
+    computed,
+    watch,
+    watchEffect,
+    reactive,
+    readonly,
+    toRef,
+    toRefs,
+    unref,
+    isRef,
+    onMounted,
+    onUnmounted,
+    onBeforeMount,
+    onBeforeUnmount,
+    onUpdated,
+    onBeforeUpdate,
+    nextTick,
+    provide,
+    inject,
+  };
+  Object.assign(window, vueApi);
 
-const createNuxtMocks = (app, router) => {
-  // definePageMeta - просто заглушка, мета уже в routes
-  app.config.globalProperties.definePageMeta = () => {};
-
-  // Глобальные функции для auto-import
+  // Nuxt composables заглушки
   const nuxtMocks = {
     definePageMeta: () => {},
     navigateTo: (to) => router.push(to),
     useRoute: () => router.currentRoute.value,
     useRouter: () => router,
+    useFetch: async (url, opts = {}) => {
+      const data = ref(null);
+      const error = ref(null);
+      const pending = ref(true);
+
+      try {
+        const response = await fetch(url, opts);
+        data.value = await response.json();
+      } catch (e) {
+        error.value = e;
+      } finally {
+        pending.value = false;
+      }
+
+      return { data, error, pending };
+    },
     useRuntimeConfig: () => ({
       public: {
         siteUrl: process.env.SITE_URL || "http://localhost:3000",
@@ -56,38 +123,28 @@ const createNuxtMocks = (app, router) => {
       const state = app.config.globalProperties.$nuxtState || {};
       if (!state[key] && init) state[key] = init();
       app.config.globalProperties.$nuxtState = state;
-      return { value: state[key] };
+      return ref(state[key]);
     },
-    useCookie: (name) => ({ value: null }), // заглушка
+    useCookie: (name) => ({ value: null }),
     useHead: () => {},
     useSeoMeta: () => {},
   };
 
-  // Делаем их глобальными
+  Object.assign(window, nuxtMocks);
+
+  // Composables
+  Object.assign(window, composables);
+
+  // Добавляем в глобальные свойства приложения
   Object.keys(nuxtMocks).forEach((key) => {
-    window[key] = nuxtMocks[key];
     app.config.globalProperties[`$${key}`] = nuxtMocks[key];
   });
-
-  // делаем глобальными свои кастомные компосаблы
-  Object.assign(window, composables);
   Object.keys(composables).forEach((key) => {
     app.config.globalProperties[`$${key}`] = composables[key];
   });
-};
 
-// Определение маршрутов
-const routes = [
-  { path: "/", component: IndexPage },
-  { path: "/books", component: BooksPage },
-  { path: "/chat", component: ChatPage },
-  { path: "/auth/login", component: LoginPage },
-  { path: "/auth/register", component: RegisterPage },
-  { path: "/profile", component: ProfilePage },
-  { path: "/profile/onboarding", component: OnboardingPage },
-  // Redirect для несуществующих маршрутов
-  { path: "/:pathMatch(.*)*", redirect: "/" },
-];
+  app.provide("$router", router);
+};
 
 const vueLifecycles = singleSpaVue({
   createApp,
@@ -96,36 +153,17 @@ const vueLifecycles = singleSpaVue({
       return h(App);
     },
   },
-  handleInstance: (app, info) => {
-    // Создаем роутер для SPA
+  handleInstance: (app) => {
     const router = createRouter({
       history: createWebHistory("/read-mind-ai"),
       routes,
     });
 
     app.use(router);
-
-    createSupabaseApp(app);
     createNuxtMocks(app, router);
-
-    // Эмулируем некоторые Nuxt провайдеры для композаблов
-    app.provide("$router", router);
-
-    // Для рабочих композаблов можно добавить заглушки
-    const runtimeConfig = {
-      public: {
-        siteUrl: process.env.SITE_URL || "http://localhost:3000",
-        siteName: "ReadMind AI",
-      },
-    };
-    app.provide("$config", runtimeConfig);
-
-    // Добавляем глобальные заглушки для Nuxt композаблов
-    app.config.globalProperties.$definePageMeta = () => {};
   },
 });
 
-// Wrapper функции для совместимости с brojs
 export const bootstrap = (props = {}) => {
   console.log("Bootstrap called with:", props);
   return vueLifecycles.bootstrap(props);
@@ -134,19 +172,15 @@ export const bootstrap = (props = {}) => {
 export const mount = (props = {}) => {
   console.log("Mount called with:", props);
 
-  // Если props это элемент DOM или строка, создаем правильную структуру
   if (typeof props === "string" || props instanceof HTMLElement) {
     props = { domElement: props };
   }
-  // Если domElement отсутствует, но есть другие способы его получить
   if (!props.domElement) {
-    // Попробуем найти элемент по стандартным селекторам
     props.domElement =
       document.querySelector("#single-spa-application\\:read-mind-ai") ||
       document.querySelector('[data-name="read-mind-ai"]') ||
       document.body;
   }
-  // Добавляем недостающие поля single-spa
   if (!props.name) props.name = "read-mind-ai";
   if (!props.singleSpa) props.singleSpa = {};
   if (!props.mountParcel) props.mountParcel = () => {};
@@ -160,16 +194,10 @@ export const unmount = (props = {}) => {
   return vueLifecycles.unmount(props);
 };
 
-// Экспортируем в глобальный объект для совместимости
 if (typeof window !== "undefined") {
-  // Для UMD модуля
   window.ReadMindAI = { bootstrap, mount, unmount };
-
-  // Для brojs - функции должны быть доступны глобально
   window.bootstrap = bootstrap;
   window.mount = mount;
   window.unmount = unmount;
-
-  // todo: поскольку brojs не хочет сам запускать mount, пока что буду это делать сам
   mount();
 }
