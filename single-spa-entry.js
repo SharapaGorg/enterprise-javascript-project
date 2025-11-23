@@ -1,44 +1,7 @@
 import singleSpaVue from "single-spa-vue";
-import { createApp, h, ref, computed } from "vue";
+import { createApp, h } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import App from "./app/MicrofrontendApp.vue";
-import * as nuxtCompat from "./app/utils/nuxt-compat";
-
-// Экспортируем Nuxt-совместимые функции глобально
-if (typeof window !== "undefined") {
-  Object.assign(window, nuxtCompat);
-
-  // Также добавляем импорты композаблов
-  window.useAuth = () => {
-    const user = nuxtCompat.useSupabaseUser();
-    const client = nuxtCompat.useSupabaseClient();
-    const router = nuxtCompat.useRouter();
-
-    return {
-      user,
-      login: async (email, password) =>
-        client.auth.signInWithPassword({ email, password }),
-      register: async (email, password) =>
-        client.auth.signUp({ email, password }),
-      logout: async () => {
-        await client.auth.signOut();
-        router.push("/");
-      },
-      isAuthenticated: computed(() => !!user.value),
-    };
-  };
-
-  window.useBooks = () => {
-    return {
-      getBooks: async (params = {}) =>
-        nuxtCompat.$fetch("/api/books", { query: params }),
-      getBookById: async (id) => nuxtCompat.$fetch(`/api/books/${id}`),
-      searchBooks: (params) =>
-        nuxtCompat.useFetch("/api/books", { query: params }),
-      fetchBook: (id) => nuxtCompat.useFetch(`/api/books/${id}`),
-    };
-  };
-}
 
 // Импорт страниц
 import IndexPage from "./app/pages/index.vue";
