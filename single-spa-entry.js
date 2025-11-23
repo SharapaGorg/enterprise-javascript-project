@@ -7,30 +7,34 @@ import * as nuxtCompat from "./app/utils/nuxt-compat";
 // Экспортируем Nuxt-совместимые функции глобально
 if (typeof window !== "undefined") {
   Object.assign(window, nuxtCompat);
-  
+
   // Также добавляем импорты композаблов
   window.useAuth = () => {
     const user = nuxtCompat.useSupabaseUser();
     const client = nuxtCompat.useSupabaseClient();
     const router = nuxtCompat.useRouter();
-    
+
     return {
       user,
-      login: async (email, password) => client.auth.signInWithPassword({ email, password }),
-      register: async (email, password) => client.auth.signUp({ email, password }),
+      login: async (email, password) =>
+        client.auth.signInWithPassword({ email, password }),
+      register: async (email, password) =>
+        client.auth.signUp({ email, password }),
       logout: async () => {
         await client.auth.signOut();
-        router.push('/');
+        router.push("/");
       },
       isAuthenticated: computed(() => !!user.value),
     };
   };
-  
+
   window.useBooks = () => {
     return {
-      getBooks: async (params = {}) => nuxtCompat.$fetch('/api/books', { query: params }),
+      getBooks: async (params = {}) =>
+        nuxtCompat.$fetch("/api/books", { query: params }),
       getBookById: async (id) => nuxtCompat.$fetch(`/api/books/${id}`),
-      searchBooks: (params) => nuxtCompat.useFetch('/api/books', { query: params }),
+      searchBooks: (params) =>
+        nuxtCompat.useFetch("/api/books", { query: params }),
       fetchBook: (id) => nuxtCompat.useFetch(`/api/books/${id}`),
     };
   };
@@ -68,7 +72,7 @@ const vueLifecycles = singleSpaVue({
   handleInstance: (app, info) => {
     // Создаем роутер для SPA
     const router = createRouter({
-      history: createWebHistory("/"),
+      history: createWebHistory("/read-mind-ai"),
       routes,
     });
 
@@ -88,22 +92,6 @@ const vueLifecycles = singleSpaVue({
 
     // Добавляем глобальные заглушки для Nuxt композаблов
     app.config.globalProperties.$definePageMeta = () => {};
-    
-    // Глобальные заглушки для композаблов
-    if (typeof window !== "undefined") {
-      window.definePageMeta = () => {};
-      window.useHead = () => {};
-      window.useRouter = () => router;
-      window.useRoute = () => router.currentRoute.value;
-      window.useSupabaseClient = () => ({
-        auth: {
-          signInWithPassword: async () => ({ data: null, error: null }),
-          signUp: async () => ({ data: null, error: null }),
-          signOut: async () => ({ error: null }),
-        }
-      });
-      window.useSupabaseUser = () => ({ value: null });
-    }
   },
 });
 

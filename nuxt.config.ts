@@ -21,6 +21,14 @@ export default defineNuxtConfig({
   supabase: {
     redirect: false,
   },
+  experimental: {
+    externalVue: false, // Важно! Включает Vue в bundle
+  },
+
+  imports: {
+    autoImport: true,
+    global: true, // Делает auto-imports глобальными
+  },
 
   image: {
     quality: 90,
@@ -60,12 +68,14 @@ export default defineNuxtConfig({
   // Конфигурация для Single-SPA микрофронтенда
   vite: {
     define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
-    }
+      "process.env.NODE_ENV": JSON.stringify(
+        process.env.NODE_ENV || "development",
+      ),
+    },
   },
 
   // Переопределяем сборку для brojs микрофронтенда
-  builder: '@nuxt/vite-builder',
+  builder: "@nuxt/vite-builder",
 
   // Оптимизация для production
   nitro: {
