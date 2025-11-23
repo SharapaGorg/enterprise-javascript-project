@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "vite build --config vite.microfrontend.config.js",
+    "build:prod": "vite build --config vite.microfrontend.config.js",
     "build:nuxt": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
