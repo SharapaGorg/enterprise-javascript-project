@@ -75,7 +75,7 @@ const vueLifecycles = singleSpaVue({
 
     app.use(router);
 
-    createNuxtMocks();
+    createNuxtMocks(app, router);
 
     // Эмулируем некоторые Nuxt провайдеры для композаблов
     app.provide("$router", router);
