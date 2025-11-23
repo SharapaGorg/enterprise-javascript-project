@@ -3,7 +3,9 @@
     <div class="container">
       <header class="page-header">
         <h1>Онбординг</h1>
-        <p class="header-subtitle">Помогите нам узнать о ваших предпочтениях в чтении</p>
+        <p class="header-subtitle">
+          Помогите нам узнать о ваших предпочтениях в чтении
+        </p>
       </header>
       <OnboardingProgress :current="current" :total="steps.length" />
 
@@ -16,13 +18,10 @@
               class="input"
               rows="6"
               :value="(answers[step.id] as string) ?? ''"
-              @input="
-                setAnswer(
-                  step.id,
-                  ($event.target as HTMLTextAreaElement).value,
-                )
-              "
               :placeholder="`Введите ваш ответ на вопрос: ${step.question}`"
+              @input="
+                setAnswer(step.id, ($event.target as HTMLTextAreaElement).value)
+              "
             />
           </div>
         </div>
@@ -61,7 +60,6 @@
 import { computed } from "vue";
 import { useOnboarding } from "@/composables/useOnboarding";
 import OnboardingProgress from "@/components/OnboardingProgress.vue";
-import { navigateTo } from "#app";
 
 definePageMeta({
   middleware: "auth",

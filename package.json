@@ -1,9 +1,10 @@
 {
-  "name": "nuxt-app",
+  "name": "read-mind-ai",
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "nuxt build",
+    "build": "vite build --config vite.microfrontend.config.js",
+    "build:nuxt": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
@@ -20,16 +21,18 @@
     "@nuxt/image": "^1.11.0",
     "@nuxtjs/supabase": "^2.0.1",
     "nuxt": "^4.1.2",
+    "single-spa": "^6.0.3",
+    "single-spa-vue": "^3.0.1",
     "vue": "^3.5.22",
     "vue-router": "^4.5.1"
   },
-  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
   "devDependencies": {
     "@eslint/js": "^9.38.0",
     "@types/node": "^22.10.5",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^5.4.11",
     "@vitest/coverage-v8": "^3.2.4",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9",
