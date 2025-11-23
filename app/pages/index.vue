@@ -27,11 +27,8 @@
 
 <script setup lang="ts">
 import BookmarksPreview from '@/components/BookmarksPreview.vue';
-import { ref } from 'vue';
 
-// Временно убираем авторизацию для тестирования
-// В продакшене будет получать данные пользователя из brojs props
-const user = ref(null); // ref({ id: 1, email: 'test@example.com' }) для тестирования авторизованного состояния
+const { user } = useAuth();
 </script>
 
 <style scoped>
