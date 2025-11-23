@@ -1,7 +1,7 @@
 import singleSpaVue from 'single-spa-vue'
 import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import App from './app/app.vue'
+import App from './app/MicrofrontendApp.vue'
 
 // Импорт страниц
 import IndexPage from './app/pages/index.vue'
