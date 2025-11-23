@@ -1,4 +1,5 @@
-import type { BooksApiResponse, Book, BooksQueryParams } from '~~/types/books';
+import type { BooksApiResponse, Book, BooksQueryParams } from "~~/types/books";
+import { API_URL } from "~/constants";
 
 export const useBooks = () => {
   /**
@@ -7,16 +8,16 @@ export const useBooks = () => {
   const getBooks = async (params: BooksQueryParams = {}) => {
     const queryParams = new URLSearchParams();
 
-    if (params.query) queryParams.append('query', params.query);
-    if (params.author) queryParams.append('author', params.author);
-    if (params.category) queryParams.append('category', params.category);
-    if (params.language) queryParams.append('language', params.language);
-    if (params.orderBy) queryParams.append('orderBy', params.orderBy);
-    if (params.page) queryParams.append('page', params.page.toString());
-    if (params.limit) queryParams.append('limit', params.limit.toString());
+    if (params.query) queryParams.append("query", params.query);
+    if (params.author) queryParams.append("author", params.author);
+    if (params.category) queryParams.append("category", params.category);
+    if (params.language) queryParams.append("language", params.language);
+    if (params.orderBy) queryParams.append("orderBy", params.orderBy);
+    if (params.page) queryParams.append("page", params.page.toString());
+    if (params.limit) queryParams.append("limit", params.limit.toString());
 
     const queryString = queryParams.toString();
-    const url = `/api/books${queryString ? `?${queryString}` : ''}`;
+    const url = `/api/books${queryString ? `?${queryString}` : ""}`;
 
     return await $fetch<BooksApiResponse>(url);
   };
@@ -32,9 +33,9 @@ export const useBooks = () => {
    * Поиск книг с реактивностью (для использования в компонентах)
    */
   const searchBooks = (params: Ref<BooksQueryParams> | BooksQueryParams) => {
-    return useFetch<BooksApiResponse>('/api/books', {
+    return useFetch<BooksApiResponse>(API_URL + "/books", {
       query: params,
-      key: 'books',
+      key: "books",
     });
   };
 
@@ -54,4 +55,3 @@ export const useBooks = () => {
     fetchBook,
   };
 };
-
