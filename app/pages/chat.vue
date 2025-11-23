@@ -341,12 +341,13 @@ const contextData = computed(() => {
   }
 
   // Добавляем данные профиля, если они есть
-  if (profileData.value?.profile) {
+  // TODO: useFetch в нормальном режиме возвращает реактивную переменную, а в обертке single-spa обычную, поэтому тут без .value
+  if (profileData?.profile) {
     data.profileData = {
-      full_name: profileData.value.profile.full_name,
-      favorite_genres: profileData.value.profile.favorite_genres,
-      reading_goal: profileData.value.profile.reading_goal,
-      bio: profileData.value.profile.bio,
+      full_name: profileData.profile.full_name,
+      favorite_genres: profileData.profile.favorite_genres,
+      reading_goal: profileData.profile.reading_goal,
+      bio: profileData.profile.bio,
     };
   }
 
