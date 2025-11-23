@@ -54,10 +54,3 @@ const vueLifecycles = singleSpaVue({
 })
 
 export const { bootstrap, mount, unmount } = vueLifecycles
-
-// Для brojs совместимости
-export default {
-  mount,
-  unmount,
-  bootstrap
-}

@@ -5,25 +5,33 @@ import { resolve } from "path";
 export default defineConfig({
   plugins: [vue()],
   build: {
+    lib: {
+      entry: resolve(__dirname, "single-spa-entry.js"),
+      name: "ReadMindAI",
+      formats: ["umd"],
+      fileName: () => "index.js",
+    },
     rollupOptions: {
-      input: resolve(__dirname, "single-spa-entry.js"),
+      external: [],
       output: {
-        format: "umd",
-        name: "read-mind-ai",
-        entryFileNames: "index.js",
-        chunkFileNames: "[name].js",
-        assetFileNames: "[name][extname]",
-        dir: "dist",
+        globals: {},
       },
     },
     outDir: "dist",
     emptyOutDir: true,
-    minify: false, // Временно отключим для отладки
+    minify: false,
   },
   define: {
     "process.env.NODE_ENV": JSON.stringify(
       process.env.NODE_ENV || "development",
     ),
+    "process.env.SITE_URL": JSON.stringify(
+      process.env.SITE_URL || "http://localhost:3000",
+    ),
+    "process.env": JSON.stringify({
+      NODE_ENV: process.env.NODE_ENV || "development",
+      SITE_URL: process.env.SITE_URL || "http://localhost:3000",
+    }),
   },
   resolve: {
     alias: {

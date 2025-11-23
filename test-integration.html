@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BroJS Integration Test</title>
+</head>
+<body>
+    <h1>BroJS Integration Test</h1>
+    <div id="microfrontend-root"></div>
+    
+    <script src="./dist/index.js"></script>
+    <script>
+        console.log('ReadMindAI object:', window.ReadMindAI);
+        
+        if (window.ReadMindAI) {
+            console.log('Available functions:', Object.keys(window.ReadMindAI));
+            console.log('Mount function:', window.ReadMindAI.mount);
+            console.log('Unmount function:', window.ReadMindAI.unmount);
+            console.log('Bootstrap function:', window.ReadMindAI.bootstrap);
+            
+            // Test if functions are callable
+            if (typeof window.ReadMindAI.mount === 'function') {
+                console.log('✅ Mount function is available and callable');
+                
+                // Try to mount (this will likely fail without proper DOM setup, but we can test the call)
+                try {
+                    window.ReadMindAI.mount({
+                        domElement: document.getElementById('microfrontend-root'),
+                        name: 'read-mind-ai'
+                    });
+                    console.log('✅ Mount function called successfully');
+                } catch (error) {
+                    console.log('⚠️ Mount function failed (expected):', error.message);
+                }
+            } else {
+                console.log('❌ Mount function is not available or not a function');
+            }
+        } else {
+            console.log('❌ ReadMindAI object not found on window');
+        }
+    </script>
+</body>
+</html>
