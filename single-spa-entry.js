@@ -24,7 +24,7 @@ import {
 } from "vue";
 import { createRouter, createWebHistory } from "vue-router";
 import { createClient } from "@supabase/supabase-js";
-import * as composables from "./composables";
+import * as composables from "./app/composables";
 import App from "./app/MicrofrontendApp.vue";
 
 // Импорт страниц
