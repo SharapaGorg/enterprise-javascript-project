@@ -84,6 +84,12 @@ export default defineNuxtConfig({
     //   routes: ["/read-mind-ai"], // Предрендер главной страницы для быстрой загрузки
     //   crawlLinks: false, // Отключаем автоматический crawling для SPA
     // },
+    cors: {
+      origin: "*",
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
+    },
   },
 
   // TypeScript строгие проверки
