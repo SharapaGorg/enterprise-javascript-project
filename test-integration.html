@@ -23,15 +23,20 @@
             if (typeof window.ReadMindAI.mount === 'function') {
                 console.log('✅ Mount function is available and callable');
                 
-                // Try to mount (this will likely fail without proper DOM setup, but we can test the call)
+                // Try to mount with proper single-spa arguments
                 try {
+                    // Single-spa mount function expects: mount(props)
+                    // where props contains { domElement, name, singleSpa, mountParcel }
                     window.ReadMindAI.mount({
+                        name: 'read-mind-ai',
                         domElement: document.getElementById('microfrontend-root'),
-                        name: 'read-mind-ai'
+                        singleSpa: {}, // Mock singleSpa object
+                        mountParcel: () => {} // Mock mountParcel function
                     });
                     console.log('✅ Mount function called successfully');
                 } catch (error) {
-                    console.log('⚠️ Mount function failed (expected):', error.message);
+                    console.log('⚠️ Mount function failed:', error.message);
+                    console.error('Full error:', error);
                 }
             } else {
                 console.log('❌ Mount function is not available or not a function');
