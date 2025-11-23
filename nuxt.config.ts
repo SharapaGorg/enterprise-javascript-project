@@ -81,7 +81,7 @@ export default defineNuxtConfig({
   nitro: {
     compressPublicAssets: true,
     prerender: {
-      routes: ["/"], // Предрендер главной страницы для быстрой загрузки
+      routes: ["/read-mind-ai"], // Предрендер главной страницы для быстрой загрузки
       crawlLinks: false, // Отключаем автоматический crawling для SPA
     },
   },

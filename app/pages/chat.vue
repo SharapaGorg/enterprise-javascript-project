@@ -4,13 +4,16 @@
       <button
         v-if="!isChatListOpen"
         class="btn-open-chat-list"
-        @click="isChatListOpen = true"
         title="Открыть список чатов"
+        @click="isChatListOpen = true"
       >
         💬
       </button>
 
-      <div class="chat-list-wrapper" :class="{ 'chat-list-wrapper--hidden': !isChatListOpen }">
+      <div
+        class="chat-list-wrapper"
+        :class="{ 'chat-list-wrapper--hidden': !isChatListOpen }"
+      >
         <ChatList
           :chats="chats"
           :current-chat-id="currentChatId"
@@ -26,63 +29,78 @@
       <div class="chat-main">
         <header class="chat-header">
           <div class="header-left">
-            <h1>🤖 {{ currentChat?.title || 'Чат с ИИ' }}</h1>
-            <p class="chat-subtitle">Задайте вопрос о книгах, получите рекомендации или обсудите литературу</p>
+            <h1>🤖 {{ currentChat?.title || "Чат с ИИ" }}</h1>
+            <p class="chat-subtitle">
+              Задайте вопрос о книгах, получите рекомендации или обсудите
+              литературу
+            </p>
           </div>
           <div class="header-actions">
-            <NuxtLink to="/" class="btn-home" title="На главную">
+            <NuxtLink to="/read-mind-ai" class="btn-home" title="На главную">
               🏠 Главная
             </NuxtLink>
-            <button v-if="messages.length > 0" class="btn-clear" @click="handleClear">🗑️ Очистить</button>
-            <button class="btn-new-chat-header" @click="handleCreateChat" title="Новый чат">
+            <button
+              v-if="messages.length > 0"
+              class="btn-clear"
+              @click="handleClear"
+            >
+              🗑️ Очистить
+            </button>
+            <button
+              class="btn-new-chat-header"
+              title="Новый чат"
+              @click="handleCreateChat"
+            >
               ➕ Новый
             </button>
           </div>
         </header>
 
-        <div class="chat-messages" ref="messagesContainer">
-        <div v-if="messages.length === 0" class="welcome-message">
-          <div class="welcome-icon">📚</div>
-          <h2>Добро пожаловать в чат с ИИ-ассистентом!</h2>
-          <p>Я помогу вам:</p>
-          <ul class="help-list">
-            <li>Найти книги по вашим интересам</li>
-            <li>Получить рекомендации для чтения</li>
-            <li>Обсудить литературные произведения</li>
-            <li>Узнать больше о книгах и авторах</li>
-          </ul>
-          <p class="hint">Начните диалог, отправив сообщение ниже 👇</p>
-        </div>
-
-        <div
-          v-for="(message, index) in messages"
-          :key="index"
-          :class="['message', `message--${message.role}`]"
-        >
-          <div class="message-avatar">
-            <span v-if="message.role === 'user'">👤</span>
-            <span v-else>🤖</span>
+        <div ref="messagesContainer" class="chat-messages">
+          <div v-if="messages.length === 0" class="welcome-message">
+            <div class="welcome-icon">📚</div>
+            <h2>Добро пожаловать в чат с ИИ-ассистентом!</h2>
+            <p>Я помогу вам:</p>
+            <ul class="help-list">
+              <li>Найти книги по вашим интересам</li>
+              <li>Получить рекомендации для чтения</li>
+              <li>Обсудить литературные произведения</li>
+              <li>Узнать больше о книгах и авторах</li>
+            </ul>
+            <p class="hint">Начните диалог, отправив сообщение ниже 👇</p>
           </div>
-          <div class="message-content">
-            <div class="message-text" v-html="formatMessage(message.content)"></div>
-            <div v-if="message.timestamp" class="message-time">
-              {{ formatTime(message.timestamp) }}
+
+          <div
+            v-for="(message, index) in messages"
+            :key="index"
+            :class="['message', `message--${message.role}`]"
+          >
+            <div class="message-avatar">
+              <span v-if="message.role === 'user'">👤</span>
+              <span v-else>🤖</span>
+            </div>
+            <div class="message-content">
+              <div
+                class="message-text"
+                v-html="formatMessage(message.content)"
+              ></div>
+              <div v-if="message.timestamp" class="message-time">
+                {{ formatTime(message.timestamp) }}
+              </div>
+            </div>
+          </div>
+
+          <div v-if="isLoading" class="message message--assistant">
+            <div class="message-avatar">🤖</div>
+            <div class="message-content">
+              <div class="typing-indicator">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
             </div>
           </div>
         </div>
-
-        <div v-if="isLoading" class="message message--assistant">
-          <div class="message-avatar">🤖</div>
-          <div class="message-content">
-            <div class="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       </div>
 
       <aside class="chat-sidebar">
@@ -91,24 +109,30 @@
           <div v-if="showBookResults" class="books-results-section">
             <div class="sidebar-header-with-close">
               <h3 class="sidebar-title">📚 Рекомендуемые книги</h3>
-              <button class="btn-close-results" @click="closeBookResults" title="Закрыть">✕</button>
+              <button
+                class="btn-close-results"
+                title="Закрыть"
+                @click="closeBookResults"
+              >
+                ✕
+              </button>
             </div>
-            
+
             <div v-if="isSearchingBooks" class="books-loading">
               <div class="loading-spinner"></div>
               <p>Ищем книги...</p>
             </div>
-            
+
             <div v-else-if="recommendedBooks.length > 0" class="books-list">
-                    <BookCard
-                      v-for="book in recommendedBooks"
-                      :key="book.id"
-                      :book="book"
-                      :show-bookmark="true"
-                      @click="handleBookClick"
-                    />
+              <BookCard
+                v-for="book in recommendedBooks"
+                :key="book.id"
+                :book="book"
+                :show-bookmark="true"
+                @click="handleBookClick"
+              />
             </div>
-            
+
             <div v-else class="books-empty">
               <p>Книги не найдены</p>
             </div>
@@ -124,7 +148,10 @@
                 <button
                   v-for="genre in availableGenres"
                   :key="genre"
-                  :class="['filter-tag', { active: selectedGenres.includes(genre) }]"
+                  :class="[
+                    'filter-tag',
+                    { active: selectedGenres.includes(genre) },
+                  ]"
                   @click="toggleGenre(genre)"
                 >
                   {{ genre }}
@@ -170,7 +197,7 @@
       </div>
 
       <div class="chat-input-container">
-        <form @submit.prevent="handleSend" class="chat-form">
+        <form class="chat-form" @submit.prevent="handleSend">
           <textarea
             v-model="inputMessage"
             class="chat-input"
@@ -195,24 +222,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick, computed, onMounted } from 'vue';
-import { useChat } from '@/composables/useChat';
-import { useOnboarding } from '@/composables/useOnboarding';
-import { useProfile } from '@/composables/useProfile';
-import { useBooks } from '@/composables/useBooks';
-import { parseBookRecommendations } from '@/utils/bookParser';
-import type { Book } from '~~/types/books';
-import BookCard from '@/components/BookCard.vue';
+import { ref, watch, nextTick, computed, onMounted } from "vue";
+import { useChat } from "@/composables/useChat";
+import { useOnboarding } from "@/composables/useOnboarding";
+import { useProfile } from "@/composables/useProfile";
+import { useBooks } from "@/composables/useBooks";
+import { parseBookRecommendations } from "@/utils/bookParser";
+import type { Book } from "~~/types/books";
+import BookCard from "@/components/BookCard.vue";
 
 definePageMeta({
-  middleware: 'auth',
+  middleware: "auth",
 });
 
 // SEO
 useHead({
-  title: 'Чат с ИИ - ReadMind AI',
+  title: "Чат с ИИ - ReadMind AI",
   meta: [
-    { name: 'description', content: 'Чат с ИИ-ассистентом для получения рекомендаций книг и обсуждения литературы' },
+    {
+      name: "description",
+      content:
+        "Чат с ИИ-ассистентом для получения рекомендаций книг и обсуждения литературы",
+    },
   ],
 });
 
@@ -234,7 +265,7 @@ const {
 const { answers: onboardingAnswers } = useOnboarding();
 const { fetchProfile } = useProfile();
 const { getBooks } = useBooks();
-const inputMessage = ref('');
+const inputMessage = ref("");
 const messagesContainer = ref<HTMLElement | null>(null);
 const isChatListOpen = ref(true); // По умолчанию открыт
 
@@ -245,39 +276,39 @@ const showBookResults = ref(false);
 
 // Тематические фильтры
 const availableGenres = [
-  'Фантастика',
-  'Фэнтези',
-  'Детектив',
-  'Роман',
-  'Триллер',
-  'Ужасы',
-  'Научпоп',
-  'Биография',
-  'История',
-  'Философия',
-  'Поэзия',
-  'Классика',
+  "Фантастика",
+  "Фэнтези",
+  "Детектив",
+  "Роман",
+  "Триллер",
+  "Ужасы",
+  "Научпоп",
+  "Биография",
+  "История",
+  "Философия",
+  "Поэзия",
+  "Классика",
 ];
 
 const availableTypes = [
-  'Любой',
-  'Художественная',
-  'Научная',
-  'Мемуары',
-  'Эссе',
+  "Любой",
+  "Художественная",
+  "Научная",
+  "Мемуары",
+  "Эссе",
 ];
 
 const availableEras = [
-  'Любая',
-  'Классическая',
-  'Современная',
-  'Авангард',
-  'Постмодерн',
+  "Любая",
+  "Классическая",
+  "Современная",
+  "Авангард",
+  "Постмодерн",
 ];
 
 const selectedGenres = ref<string[]>([]);
-const selectedType = ref('Любой');
-const selectedEra = ref('Любая');
+const selectedType = ref("Любой");
+const selectedEra = ref("Любая");
 
 // Загружаем профиль для контекста
 const { data: profileData } = fetchProfile();
@@ -324,10 +355,10 @@ const contextData = computed(() => {
   if (selectedGenres.value.length > 0) {
     filters.genres = selectedGenres.value;
   }
-  if (selectedType.value !== 'Любой') {
+  if (selectedType.value !== "Любой") {
     filters.type = selectedType.value;
   }
-  if (selectedEra.value !== 'Любая') {
+  if (selectedEra.value !== "Любая") {
     filters.era = selectedEra.value;
   }
 
@@ -339,24 +370,37 @@ const contextData = computed(() => {
 });
 
 // Автоматическая прокрутка к последнему сообщению
-watch(messages, () => {
-  nextTick(() => {
-    scrollToBottom();
-  });
-}, { deep: true });
+watch(
+  messages,
+  () => {
+    nextTick(() => {
+      scrollToBottom();
+    });
+  },
+  { deep: true },
+);
 
 // Отдельный watch для отслеживания завершения загрузки и проверки рекомендаций
 watch(isLoading, async (newLoading, oldLoading) => {
   // Когда загрузка завершается (с true на false), проверяем последнее сообщение
   if (oldLoading === true && newLoading === false) {
     await nextTick();
-    
+
     if (messages.value.length > 0) {
       const lastMessage = messages.value[messages.value.length - 1];
-      
-      if (lastMessage.role === 'assistant' && lastMessage.content && lastMessage.content.trim().length > 0) {
-        console.log('Загрузка завершена, проверяем последнее сообщение на рекомендации книг');
-        console.log('Содержимое (первые 200 символов):', lastMessage.content.substring(0, 200));
+
+      if (
+        lastMessage.role === "assistant" &&
+        lastMessage.content &&
+        lastMessage.content.trim().length > 0
+      ) {
+        console.log(
+          "Загрузка завершена, проверяем последнее сообщение на рекомендации книг",
+        );
+        console.log(
+          "Содержимое (первые 200 символов):",
+          lastMessage.content.substring(0, 200),
+        );
         await checkAndSearchBooks(lastMessage.content);
       }
     }
@@ -398,19 +442,19 @@ function handleSend() {
   }
 
   const message = inputMessage.value;
-  inputMessage.value = '';
+  inputMessage.value = "";
 
   sendMessage(message, contextData.value);
 }
 
 function handleClear() {
-  if (confirm('Вы уверены, что хотите очистить историю этого чата?')) {
+  if (confirm("Вы уверены, что хотите очистить историю этого чата?")) {
     clearChat();
   }
 }
 
 function handleCreateChat() {
-  const title = prompt('Введите название нового чата (или оставьте пустым):');
+  const title = prompt("Введите название нового чата (или оставьте пустым):");
   createChat(title || undefined);
 }
 
@@ -428,21 +472,24 @@ function handleRenameChat(chatId: string, newTitle: string) {
 
 function formatMessage(content: string): string {
   // Удаляем технические метки структурированного формата книг
-  let formatted = content.replace(/---BOOKS_START---[\s\S]*?---BOOKS_END---/g, '');
-  
+  let formatted = content.replace(
+    /---BOOKS_START---[\s\S]*?---BOOKS_END---/g,
+    "",
+  );
+
   // Простое форматирование: заменяем переносы строк на <br>
   formatted = formatted
-    .replace(/\n/g, '<br>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>');
-  
+    .replace(/\n/g, "<br>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
   return formatted;
 }
 
 function formatTime(date: Date): string {
-  return new Date(date).toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
+  return new Date(date).toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
@@ -450,10 +497,10 @@ function formatTime(date: Date): string {
 // Возвращает true, если книги были найдены и обработаны
 async function checkAndSearchBooks(messageContent: string): Promise<boolean> {
   try {
-    console.log('Парсинг рекомендаций книг из сообщения...');
+    console.log("Парсинг рекомендаций книг из сообщения...");
     const parsedBooks = parseBookRecommendations(messageContent);
-    console.log('Найдено книг:', parsedBooks.length, parsedBooks);
-    
+    console.log("Найдено книг:", parsedBooks.length, parsedBooks);
+
     if (parsedBooks.length === 0) {
       // Не скрываем результаты, если они уже были показаны (чтобы не мелькало)
       if (!showBookResults.value) {
@@ -462,7 +509,7 @@ async function checkAndSearchBooks(messageContent: string): Promise<boolean> {
       return false;
     }
 
-    console.log('Начинаем поиск книг...');
+    console.log("Начинаем поиск книг...");
     isSearchingBooks.value = true;
     recommendedBooks.value = [];
     showBookResults.value = true;
@@ -473,32 +520,34 @@ async function checkAndSearchBooks(messageContent: string): Promise<boolean> {
         const result = await getBooks({
           query: parsedBook.query,
           limit: 3, // Берем первые 3 результата
-          language: 'ru',
+          language: "ru",
         });
-        
+
         if (result.books && result.books.length > 0) {
           // Возвращаем первый результат (наиболее релевантный)
           return result.books[0];
         }
         return null;
       } catch (error) {
-        console.error('Ошибка при поиске книги:', error);
+        console.error("Ошибка при поиске книги:", error);
         return null;
       }
     });
 
     const results = await Promise.all(searchPromises);
-    recommendedBooks.value = results.filter((book): book is Book => book !== null);
-    
+    recommendedBooks.value = results.filter(
+      (book): book is Book => book !== null,
+    );
+
     // Если ничего не найдено, скрываем результаты
     if (recommendedBooks.value.length === 0) {
       showBookResults.value = false;
       return false;
     }
-    
+
     return true;
   } catch (error) {
-    console.error('Ошибка при парсинге рекомендаций:', error);
+    console.error("Ошибка при парсинге рекомендаций:", error);
     showBookResults.value = false;
     return false;
   } finally {
@@ -509,9 +558,9 @@ async function checkAndSearchBooks(messageContent: string): Promise<boolean> {
 function handleBookClick(book: Book) {
   // Открываем информацию о книге в новой вкладке или модальном окне
   if (book.infoLink) {
-    window.open(book.infoLink, '_blank');
+    window.open(book.infoLink, "_blank");
   } else if (book.previewLink) {
-    window.open(book.previewLink, '_blank');
+    window.open(book.previewLink, "_blank");
   }
 }
 
@@ -657,7 +706,6 @@ function closeBookResults() {
   overflow-x: hidden;
 }
 
-
 .welcome-message {
   text-align: center;
   padding: 60px 20px;
@@ -694,7 +742,7 @@ function closeBookResults() {
 }
 
 .help-list li::before {
-  content: '✓ ';
+  content: "✓ ";
   color: #667eea;
   font-weight: bold;
   margin-right: 8px;
@@ -803,7 +851,9 @@ function closeBookResults() {
 }
 
 @keyframes typing {
-  0%, 60%, 100% {
+  0%,
+  60%,
+  100% {
     transform: translateY(0);
     opacity: 0.7;
   }
@@ -1150,7 +1200,6 @@ function closeBookResults() {
     padding: 16px;
   }
 
-
   .message-content {
     max-width: 85%;
   }
@@ -1169,4 +1218,3 @@ function closeBookResults() {
   }
 }
 </style>
-

@@ -1,6 +1,6 @@
 <template>
   <nav class="navigation">
-    <RouterLink to="/" class="nav-logo">
+    <RouterLink to="/read-mind-ai" class="nav-logo">
       📚 ReadMind AI
     </RouterLink>
     <div class="nav-menu">
@@ -111,4 +111,3 @@
   }
 }
 </style>
-

@@ -4,7 +4,9 @@
       <header class="page-header">
         <h1>👤 Мой профиль</h1>
         <div class="header-actions">
-          <NuxtLink to="/" class="btn-home"> 🏠 На главную </NuxtLink>
+          <NuxtLink to="/read-mind-ai" class="btn-home">
+            🏠 На главную
+          </NuxtLink>
           <button class="btn-logout" @click="handleLogout">Выйти</button>
         </div>
       </header>

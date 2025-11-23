@@ -22,7 +22,7 @@ if (typeof window !== "undefined") {
         client.auth.signUp({ email, password }),
       logout: async () => {
         await client.auth.signOut();
-        router.push("/");
+        router.push("/read-mind-ai");
       },
       isAuthenticated: computed(() => !!user.value),
     };
@@ -51,15 +51,15 @@ import OnboardingPage from "./app/pages/profile/onboarding.vue";
 
 // Определение маршрутов
 const routes = [
-  { path: "/", component: IndexPage },
-  { path: "/books", component: BooksPage },
-  { path: "/chat", component: ChatPage },
-  { path: "/auth/login", component: LoginPage },
-  { path: "/auth/register", component: RegisterPage },
-  { path: "/profile", component: ProfilePage },
-  { path: "/profile/onboarding", component: OnboardingPage },
+  { path: "/read-mind-ai/", component: IndexPage },
+  { path: "/read-mind-ai/books", component: BooksPage },
+  { path: "/read-mind-ai/chat", component: ChatPage },
+  { path: "/read-mind-ai/auth/login", component: LoginPage },
+  { path: "/read-mind-ai/auth/register", component: RegisterPage },
+  { path: "/read-mind-ai/profile", component: ProfilePage },
+  { path: "/read-mind-ai/profile/onboarding", component: OnboardingPage },
   // Redirect для несуществующих маршрутов
-  { path: "/:pathMatch(.*)*", redirect: "/" },
+  { path: "/:pathMatch(.*)*", redirect: "/read-mind-ai" },
 ];
 
 const vueLifecycles = singleSpaVue({

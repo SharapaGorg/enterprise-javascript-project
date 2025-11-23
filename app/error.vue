@@ -3,11 +3,15 @@
     <div class="error-container">
       <div class="error-code">{{ error.statusCode }}</div>
       <h1 class="error-title">{{ errorTitle }}</h1>
-      <p class="error-message">{{ error.message || 'Произошла неожиданная ошибка' }}</p>
-      
+      <p class="error-message">
+        {{ error.message || "Произошла неожиданная ошибка" }}
+      </p>
+
       <div class="error-actions">
-        <NuxtLink to="/" class="btn-primary">На главную</NuxtLink>
-        <button class="btn-secondary" @click="handleError">Попробовать снова</button>
+        <NuxtLink to="/read-mind-ai" class="btn-primary">На главную</NuxtLink>
+        <button class="btn-secondary" @click="handleError">
+          Попробовать снова
+        </button>
       </div>
     </div>
   </div>
@@ -23,13 +27,13 @@ const props = defineProps({
 
 const errorTitle = computed(() => {
   const code = props.error.statusCode;
-  if (code === 404) return 'Страница не найдена';
-  if (code === 403) return 'Доступ запрещен';
-  if (code === 500) return 'Ошибка сервера';
-  return 'Что-то пошло не так';
+  if (code === 404) return "Страница не найдена";
+  if (code === 403) return "Доступ запрещен";
+  if (code === 500) return "Ошибка сервера";
+  return "Что-то пошло не так";
 });
 
-const handleError = () => clearError({ redirect: '/' });
+const handleError = () => clearError({ redirect: "/" });
 </script>
 
 <style scoped>
@@ -133,4 +137,3 @@ const handleError = () => clearError({ redirect: '/' });
   }
 }
 </style>
-
