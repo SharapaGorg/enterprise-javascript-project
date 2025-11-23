@@ -3,27 +3,6 @@ import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './app/MicrofrontendApp.vue'
 
-// Функция для инъекции CSS
-function injectCSS() {
-  if (document.querySelector('#readmind-styles')) return; // Избегаем дублирования
-  
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.id = 'readmind-styles';
-  
-  // Пытаемся найти CSS файл рядом с текущим скриптом
-  const currentScript = document.currentScript || Array.from(document.scripts).pop();
-  if (currentScript && currentScript.src) {
-    const cssUrl = currentScript.src.replace(/\.js$/, '.css').replace(/index\.js$/, 'style.css');
-    link.href = cssUrl;
-  } else {
-    // Fallback - пытаемся загрузить из того же домена
-    const baseUrl = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
-    link.href = baseUrl + 'style.css';
-  }
-  
-  document.head.appendChild(link);
-}
 
 // Импорт страниц
 import IndexPage from './app/pages/index.vue'
@@ -75,19 +54,14 @@ const vueLifecycles = singleSpaVue({
   }
 })
 
-const { bootstrap: spaBoostrap, mount: spaMount, unmount: spaUnmount } = vueLifecycles
-
 // Wrapper функции для совместимости с brojs
 export const bootstrap = (props = {}) => {
   console.log('Bootstrap called with:', props)
-  return spaBoostrap(props)
+  return vueLifecycles.bootstrap(props)
 }
 
 export const mount = (props = {}) => {
   console.log('Mount called with:', props)
-  
-  // Инъекция CSS перед монтированием
-  injectCSS()
   
   // Если props это элемент DOM или строка, создаем правильную структуру
   if (typeof props === 'string' || props instanceof HTMLElement) {
@@ -105,11 +79,16 @@ export const mount = (props = {}) => {
   if (!props.singleSpa) props.singleSpa = {}
   if (!props.mountParcel) props.mountParcel = () => {}
   
-  return spaMount(props)
+  return vueLifecycles.mount(props)
 }
 
 export const unmount = (props = {}) => {
   console.log('Unmount called with:', props)
   if (!props.name) props.name = 'read-mind-ai'
-  return spaUnmount(props)
+  return vueLifecycles.unmount(props)
+}
+
+// Экспортируем в глобальный объект для совместимости
+if (typeof window !== 'undefined') {
+  window.ReadMindAI = { bootstrap, mount, unmount }
 }
