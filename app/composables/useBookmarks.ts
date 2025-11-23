@@ -1,14 +1,13 @@
-import { ref, watch, computed } from 'vue';
-import { useSupabaseUser } from '#imports';
-import type { Book } from '~~/types/books';
+import { ref, watch, computed } from "vue";
+import type { Book } from "~~/types/books";
 
-export type BookStatus = 
-  | 'reading'    // 📖 Читаю
-  | 'planned'    // 📝 В планах
-  | 'finished'   // ✅ Прочитано
-  | 'shelved'    // ⏸️ Отложено
-  | 'dropped'    // ❌ Брошено
-  | 'favourite'; // 💖 Любимые
+export type BookStatus =
+  | "reading" // 📖 Читаю
+  | "planned" // 📝 В планах
+  | "finished" // ✅ Прочитано
+  | "shelved" // ⏸️ Отложено
+  | "dropped" // ❌ Брошено
+  | "favourite"; // 💖 Любимые
 
 export interface BookmarkedBook extends Book {
   status: BookStatus;
@@ -16,7 +15,7 @@ export interface BookmarkedBook extends Book {
   updatedAt: string;
 }
 
-const STORAGE_KEY_BOOKMARKS = 'userBookmarks';
+const STORAGE_KEY_BOOKMARKS = "userBookmarks";
 
 export const useBookmarks = () => {
   const user = useSupabaseUser();
@@ -31,12 +30,14 @@ export const useBookmarks = () => {
   const loadBookmarks = () => {
     if (process.client && user.value) {
       try {
-        const savedBookmarks = localStorage.getItem(getStorageKey(STORAGE_KEY_BOOKMARKS));
+        const savedBookmarks = localStorage.getItem(
+          getStorageKey(STORAGE_KEY_BOOKMARKS),
+        );
         if (savedBookmarks) {
           bookmarks.value = JSON.parse(savedBookmarks);
         }
       } catch (e) {
-        console.error('Ошибка при загрузке закладок:', e);
+        console.error("Ошибка при загрузке закладок:", e);
       }
     }
   };
@@ -45,37 +46,48 @@ export const useBookmarks = () => {
   loadBookmarks();
 
   // Перезагрузка закладок когда пользователь становится доступным
-  watch(user, (newUser, oldUser) => {
-    if (newUser && !oldUser) {
-      loadBookmarks();
-    }
-  }, { immediate: false });
+  watch(
+    user,
+    (newUser, oldUser) => {
+      if (newUser && !oldUser) {
+        loadBookmarks();
+      }
+    },
+    { immediate: false },
+  );
 
   // Сохранение закладок в localStorage
   const saveBookmarks = () => {
     if (process.client) {
       try {
-        localStorage.setItem(getStorageKey(STORAGE_KEY_BOOKMARKS), JSON.stringify(bookmarks.value));
+        localStorage.setItem(
+          getStorageKey(STORAGE_KEY_BOOKMARKS),
+          JSON.stringify(bookmarks.value),
+        );
       } catch (e) {
-        console.error('Ошибка при сохранении закладок:', e);
+        console.error("Ошибка при сохранении закладок:", e);
       }
     }
   };
 
   // Автоматическое сохранение при изменении закладок
-  watch(bookmarks, () => {
-    saveBookmarks();
-  }, { deep: true });
+  watch(
+    bookmarks,
+    () => {
+      saveBookmarks();
+    },
+    { deep: true },
+  );
 
   /**
    * Добавить книгу в закладки с указанным статусом
    */
-  const addBookmark = (book: Book, status: BookStatus = 'planned') => {
+  const addBookmark = (book: Book, status: BookStatus = "planned") => {
     // Проверяем, не добавлена ли уже эта книга
-    const existingIndex = bookmarks.value.findIndex(b => b.id === book.id);
-    
+    const existingIndex = bookmarks.value.findIndex((b) => b.id === book.id);
+
     const now = new Date().toISOString();
-    
+
     if (existingIndex > -1) {
       // Обновляем существующую закладку
       bookmarks.value[existingIndex] = {
@@ -100,7 +112,7 @@ export const useBookmarks = () => {
    * Удалить книгу из закладок
    */
   const removeBookmark = (bookId: string) => {
-    const index = bookmarks.value.findIndex(b => b.id === bookId);
+    const index = bookmarks.value.findIndex((b) => b.id === bookId);
     if (index > -1) {
       bookmarks.value.splice(index, 1);
     }
@@ -110,7 +122,7 @@ export const useBookmarks = () => {
    * Изменить статус книги
    */
   const updateBookStatus = (bookId: string, status: BookStatus) => {
-    const bookmark = bookmarks.value.find(b => b.id === bookId);
+    const bookmark = bookmarks.value.find((b) => b.id === bookId);
     if (bookmark) {
       bookmark.status = status;
       bookmark.updatedAt = new Date().toISOString();
@@ -121,14 +133,14 @@ export const useBookmarks = () => {
    * Проверить, добавлена ли книга в закладки
    */
   const isBookmarked = (bookId: string): boolean => {
-    return bookmarks.value.some(b => b.id === bookId);
+    return bookmarks.value.some((b) => b.id === bookId);
   };
 
   /**
    * Получить статус книги в закладках
    */
   const getBookStatus = (bookId: string): BookStatus | null => {
-    const bookmark = bookmarks.value.find(b => b.id === bookId);
+    const bookmark = bookmarks.value.find((b) => b.id === bookId);
     return bookmark ? bookmark.status : null;
   };
 
@@ -136,7 +148,7 @@ export const useBookmarks = () => {
    * Получить книги по статусу
    */
   const getBooksByStatus = (status: BookStatus): BookmarkedBook[] => {
-    return bookmarks.value.filter(b => b.status === status);
+    return bookmarks.value.filter((b) => b.status === status);
   };
 
   /**
@@ -165,4 +177,3 @@ export const useBookmarks = () => {
     clearAllBookmarks,
   };
 };
-
