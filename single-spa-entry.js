@@ -3,6 +3,28 @@ import { createApp, h } from 'vue'
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './app/MicrofrontendApp.vue'
 
+// Функция для инъекции CSS
+function injectCSS() {
+  if (document.querySelector('#readmind-styles')) return; // Избегаем дублирования
+  
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.id = 'readmind-styles';
+  
+  // Пытаемся найти CSS файл рядом с текущим скриптом
+  const currentScript = document.currentScript || Array.from(document.scripts).pop();
+  if (currentScript && currentScript.src) {
+    const cssUrl = currentScript.src.replace(/\.js$/, '.css').replace(/index\.js$/, 'style.css');
+    link.href = cssUrl;
+  } else {
+    // Fallback - пытаемся загрузить из того же домена
+    const baseUrl = window.location.origin + window.location.pathname.replace(/[^\/]*$/, '');
+    link.href = baseUrl + 'style.css';
+  }
+  
+  document.head.appendChild(link);
+}
+
 // Импорт страниц
 import IndexPage from './app/pages/index.vue'
 import BooksPage from './app/pages/books.vue' 
@@ -63,6 +85,10 @@ export const bootstrap = (props = {}) => {
 
 export const mount = (props = {}) => {
   console.log('Mount called with:', props)
+  
+  // Инъекция CSS перед монтированием
+  injectCSS()
+  
   // Если props это элемент DOM или строка, создаем правильную структуру
   if (typeof props === 'string' || props instanceof HTMLElement) {
     props = { domElement: props }
