@@ -34,13 +34,13 @@
         </div>
 
         <button type="submit" class="btn-primary" :disabled="loading">
-          {{ loading ? 'Вход...' : 'Войти' }}
+          {{ loading ? "Вход..." : "Войти" }}
         </button>
       </form>
 
       <p class="link-text">
         Нет аккаунта?
-        <NuxtLink to="/auth/register">Зарегистрироваться</NuxtLink>
+        <RouterLink to="/auth/register">Зарегистрироваться</RouterLink>
       </p>
     </div>
   </div>
@@ -50,36 +50,36 @@
 const { user, login } = useAuth();
 const router = useRouter();
 
-const email = ref('');
-const password = ref('');
+const email = ref("");
+const password = ref("");
 const loading = ref(false);
-const error = ref('');
+const error = ref("");
 
 // SEO мета-теги
 useHead({
-  title: 'Вход - ReadMind AI',
+  title: "Вход - ReadMind AI",
   meta: [
-    { name: 'description', content: 'Войдите в свой аккаунт ReadMind AI' },
+    { name: "description", content: "Войдите в свой аккаунт ReadMind AI" },
   ],
 });
 
 // Если пользователь уже авторизован, редирект на профиль
 watchEffect(() => {
   if (user.value) {
-    router.push('/profile');
+    router.push("/profile");
   }
 });
 
 const handleLogin = async () => {
   try {
     loading.value = true;
-    error.value = '';
+    error.value = "";
 
     await login(email.value, password.value);
-    
+
     // Успешный вход - редирект произойдет через watchEffect
   } catch (err: any) {
-    error.value = err.message || 'Произошла ошибка при входе';
+    error.value = err.message || "Произошла ошибка при входе";
   } finally {
     loading.value = false;
   }
@@ -203,4 +203,3 @@ input:disabled {
   text-decoration: underline;
 }
 </style>
-

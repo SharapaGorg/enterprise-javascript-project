@@ -1,30 +1,36 @@
 import type { UpdateProfileData, ProfileApiResponse } from "~~/types/profile";
 import { API_URL } from "~/constants";
+import { createAuthHeaders } from "~/utils/auth";
 
 export const useProfile = () => {
   /**
    * Получить профиль текущего пользователя
    */
   const getProfile = async () => {
-    return await $fetch<ProfileApiResponse>(API_URL + "/profile");
+    const authConfig = await createAuthHeaders();
+    return await $fetch<ProfileApiResponse>(API_URL + "/profile", authConfig);
   };
 
   /**
    * Обновить профиль
    */
   const updateProfile = async (data: UpdateProfileData) => {
+    const authConfig = await createAuthHeaders();
     return await $fetch<ProfileApiResponse>(API_URL + "/profile", {
       method: "PATCH",
       body: data,
+      ...authConfig,
     });
   };
 
   /**
    * Получить профиль с реактивностью
    */
-  const fetchProfile = () => {
+  const fetchProfile = async () => {
+    const authConfig = await createAuthHeaders();
     return useFetch<ProfileApiResponse>(API_URL + "/profile", {
       key: "user-profile",
+      ...authConfig,
     });
   };
 

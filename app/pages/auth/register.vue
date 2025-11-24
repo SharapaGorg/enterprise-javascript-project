@@ -51,13 +51,13 @@
         </div>
 
         <button type="submit" class="btn-primary" :disabled="loading">
-          {{ loading ? 'Регистрация...' : 'Зарегистрироваться' }}
+          {{ loading ? "Регистрация..." : "Зарегистрироваться" }}
         </button>
       </form>
 
       <p class="link-text">
         Уже есть аккаунт?
-        <NuxtLink to="/auth/login">Войти</NuxtLink>
+        <RouterLink to="/auth/login">Войти</RouterLink>
       </p>
     </div>
   </div>
@@ -67,42 +67,40 @@
 const { user, register } = useAuth();
 const router = useRouter();
 
-const email = ref('');
-const password = ref('');
-const confirmPassword = ref('');
+const email = ref("");
+const password = ref("");
+const confirmPassword = ref("");
 const loading = ref(false);
-const error = ref('');
-const success = ref('');
+const error = ref("");
+const success = ref("");
 
 // SEO мета-теги
 useHead({
-  title: 'Регистрация - ReadMind AI',
-  meta: [
-    { name: 'description', content: 'Создайте аккаунт в ReadMind AI' },
-  ],
+  title: "Регистрация - ReadMind AI",
+  meta: [{ name: "description", content: "Создайте аккаунт в ReadMind AI" }],
 });
 
 // Если пользователь уже авторизован, редирект на профиль
 watchEffect(() => {
   if (user.value) {
-    router.push('/profile');
+    router.push("/profile");
   }
 });
 
 const handleRegister = async () => {
   try {
     loading.value = true;
-    error.value = '';
-    success.value = '';
+    error.value = "";
+    success.value = "";
 
     // Валидация
     if (password.value !== confirmPassword.value) {
-      error.value = 'Пароли не совпадают';
+      error.value = "Пароли не совпадают";
       return;
     }
 
     if (password.value.length < 6) {
-      error.value = 'Пароль должен содержать минимум 6 символов';
+      error.value = "Пароль должен содержать минимум 6 символов";
       return;
     }
 
@@ -110,19 +108,19 @@ const handleRegister = async () => {
 
     // Проверяем нужно ли подтверждение email
     if (data.user && !data.session) {
-      success.value = 'Проверьте email для подтверждения аккаунта';
+      success.value = "Проверьте email для подтверждения аккаунта";
       return;
     }
 
     // Если подтверждение не требуется
     if (data.session) {
-      success.value = 'Регистрация успешна! Перенаправление...';
+      success.value = "Регистрация успешна! Перенаправление...";
       setTimeout(() => {
-        router.push('/profile');
+        router.push("/profile");
       }, 1000);
     }
   } catch (err: any) {
-    error.value = err.message || 'Произошла ошибка';
+    error.value = err.message || "Произошла ошибка";
   } finally {
     loading.value = false;
   }
@@ -251,4 +249,3 @@ input:disabled {
   text-decoration: underline;
 }
 </style>
-

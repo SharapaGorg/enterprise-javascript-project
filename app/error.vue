@@ -8,7 +8,7 @@
       </p>
 
       <div class="error-actions">
-        <NuxtLink to="/" class="btn-primary">На главную</NuxtLink>
+        <RouterLink to="/" class="btn-primary">На главную</RouterLink>
         <button class="btn-secondary" @click="handleError">
           Попробовать снова
         </button>

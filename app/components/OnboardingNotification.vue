@@ -11,9 +11,9 @@
           </p>
         </div>
         <div class="notification-actions">
-          <NuxtLink to="/profile/onboarding" class="btn-notification">
+          <RouterLink to="/profile/onboarding" class="btn-notification">
             Пройти онбординг
-          </NuxtLink>
+          </RouterLink>
           <button class="btn-close" @click="dismiss">×</button>
         </div>
       </div>

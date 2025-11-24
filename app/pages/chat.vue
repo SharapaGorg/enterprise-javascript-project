@@ -36,9 +36,9 @@
             </p>
           </div>
           <div class="header-actions">
-            <NuxtLink to="/" class="btn-home" title="На главную">
+            <RouterLink to="/" class="btn-home" title="На главную">
               🏠 Главная
-            </NuxtLink>
+            </RouterLink>
             <button
               v-if="messages.length > 0"
               class="btn-clear"
@@ -311,7 +311,7 @@ const selectedType = ref("Любой");
 const selectedEra = ref("Любая");
 
 // Загружаем профиль для контекста
-const { data: profileData } = fetchProfile();
+const { data: profileData } = await fetchProfile();
 
 // Функция для переключения жанра
 function toggleGenre(genre: string) {

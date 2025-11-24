@@ -4,7 +4,7 @@
       <header class="page-header">
         <h1>👤 Мой профиль</h1>
         <div class="header-actions">
-          <NuxtLink to="/" class="btn-home"> 🏠 На главную </NuxtLink>
+          <RouterLink to="/" class="btn-home"> 🏠 На главную </RouterLink>
           <button class="btn-logout" @click="handleLogout">Выйти</button>
         </div>
       </header>
@@ -63,7 +63,7 @@
                 </p>
                 <p class="empty-hint">
                   Добавляйте книги в закладки со страницы
-                  <NuxtLink to="/books">поиска книг</NuxtLink>.
+                  <RouterLink to="/books">поиска книг</RouterLink>.
                 </p>
               </div>
             </div>
@@ -342,8 +342,8 @@ useHead({
 });
 
 // Загружаем профиль
-const { data: profile, pending, error, refresh } = fetchProfile();
-const profileData = computed(() => profile.value?.profile);
+const { data: profile, pending, error, refresh } = await fetchProfile();
+const profileData = computed(() => profile?.profile);
 
 // Состояние редактирования
 const isEditing = ref(false);
