@@ -72,6 +72,14 @@ export default defineNuxtConfig({
         process.env.NODE_ENV || "development",
       ),
     },
+    resolve: {
+      alias: {
+        "@supabase/supabase-js": "@supabase/supabase-js/dist/main/index.js"
+      }
+    },
+    optimizeDeps: {
+      include: ["@supabase/supabase-js"]
+    }
   },
 
   // Переопределяем сборку для brojs микрофронтенда
@@ -90,6 +98,18 @@ export default defineNuxtConfig({
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept"],
     },
+    // Решение проблемы с ESM модулями
+    experimental: {
+      wasm: true
+    },
+    alias: {
+      "@supabase/supabase-js": "@supabase/supabase-js/dist/main/index.js"
+    },
+    externals: {
+      traceInclude: [
+        "@supabase/supabase-js"
+      ]
+    }
   },
 
   // TypeScript строгие проверки
