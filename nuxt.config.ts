@@ -72,11 +72,6 @@ export default defineNuxtConfig({
         process.env.NODE_ENV || "development",
       ),
     },
-    resolve: {
-      alias: {
-        "@supabase/supabase-js": "@supabase/supabase-js/dist/main/index.js"
-      }
-    },
     optimizeDeps: {
       include: ["@supabase/supabase-js"]
     }
@@ -102,13 +97,9 @@ export default defineNuxtConfig({
     experimental: {
       wasm: true
     },
-    alias: {
-      "@supabase/supabase-js": "@supabase/supabase-js/dist/main/index.js"
-    },
-    externals: {
-      traceInclude: [
-        "@supabase/supabase-js"
-      ]
+    moduleSideEffects: ["@supabase/supabase-js"],
+    replace: {
+      "@supabase/supabase-js/dist/main/lib/constants": "@supabase/supabase-js/dist/main/lib/constants.js"
     }
   },
 
