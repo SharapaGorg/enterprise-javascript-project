@@ -17,7 +17,7 @@ export const useBooks = () => {
     if (params.limit) queryParams.append("limit", params.limit.toString());
 
     const queryString = queryParams.toString();
-    const url = `/api/books${queryString ? `?${queryString}` : ""}`;
+    const url = `${API_URL}/books${queryString ? `?${queryString}` : ""}`;
 
     const { data } = await useFetch<BooksApiResponse>(url);
     return data.value;
@@ -27,7 +27,7 @@ export const useBooks = () => {
    * Получить информацию о конкретной книге
    */
   const getBookById = async (id: string) => {
-    const { data } = await useFetch<Book>(`/api/books/${id}`);
+    const { data } = await useFetch<Book>(`${API_URL}/books/${id}`);
     return data.value;
   };
 
@@ -45,7 +45,7 @@ export const useBooks = () => {
    * Получить книгу с реактивностью
    */
   const fetchBook = (id: string | Ref<string>) => {
-    return useFetch<Book>(`/api/books/${unref(id)}`, {
+    return useFetch<Book>(`${API_URL}/books/${unref(id)}`, {
       key: `book-${unref(id)}`,
     });
   };
