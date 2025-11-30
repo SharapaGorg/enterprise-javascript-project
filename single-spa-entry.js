@@ -193,6 +193,8 @@ const createNuxtMocks = (app, router) => {
     useRoute: () => router.currentRoute.value,
     useRouter: () => router,
     useFetch: async (url, opts = {}) => {
+      console.log('useFetch called:', url, opts);
+      
       const data = ref(null);
       const error = ref(null);
       const pending = ref(true);
@@ -201,9 +203,12 @@ const createNuxtMocks = (app, router) => {
         pending.value = true;
         try {
           const response = await fetch(url, opts);
-          data.value = await response.json();
+          const result = await response.json();
+          data.value = result;
+          console.log('useFetch success, data.value:', result);
         } catch (e) {
           error.value = e;
+          console.error('useFetch error:', e);
         } finally {
           pending.value = false;
         }
@@ -211,7 +216,9 @@ const createNuxtMocks = (app, router) => {
 
       await refresh();
 
-      return { data, error, pending, refresh };
+      const returnValue = { data, error, pending, refresh };
+      console.log('useFetch returning object with data.value:', returnValue.data.value);
+      return returnValue;
     },
     useRuntimeConfig: () => ({
       public: {
