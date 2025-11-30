@@ -18,10 +18,10 @@
           />
           <button
             class="search-button"
-            :disabled="pending.value"
+            :disabled="pending"
             @click="handleSearch"
           >
-            {{ pending.value ? "Поиск..." : "🔍 Искать" }}
+            {{ pending ? "Поиск..." : "🔍 Искать" }}
           </button>
         </div>
 
@@ -54,11 +54,11 @@
         </div>
       </div>
 
-      <div v-if="error.value" class="error-message">
-        ❌ {{ error.value.message || "Произошла ошибка при загрузке книг" }}
+      <div v-if="error" class="error-message">
+        ❌ {{ error?.message || "Произошла ошибка при загрузке книг" }}
       </div>
 
-      <div v-if="pending.value" class="loading">
+      <div v-if="pending" class="loading">
         <div class="spinner"></div>
         <p>Загрузка книг...</p>
       </div>
@@ -206,7 +206,7 @@
 
         <div class="pagination-controls">
           <button
-            :disabled="currentPage.value <= 1 || pending.value"
+            :disabled="currentPage <= 1 || pending"
             class="pagination-btn"
             @click="prevPage"
           >
@@ -216,7 +216,7 @@
           <span class="page-number">{{ currentPage }}</span>
 
           <button
-            :disabled="!booksData?.value?.hasMore || pending.value"
+            :disabled="!booksData?.hasMore || pending"
             class="pagination-btn"
             @click="nextPage"
           >
@@ -343,7 +343,14 @@ const searchParams = computed(() => ({
   limit: 20,
 }));
 
-const booksData = ref(null);
+const booksData = ref({
+  books: [],
+  total: 0,
+  page: 1,
+  limit: 20,
+  totalPages: 0,
+  hasMore: false
+});
 const pending = ref(false);
 const error = ref(null);
 
