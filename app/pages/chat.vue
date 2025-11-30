@@ -231,10 +231,10 @@ import { parseBookRecommendations } from "@/utils/bookParser";
 import type { Book } from "~~/types/books";
 import BookCard from "@/components/BookCard.vue";
 
-// definePageMeta обрабатывается в single-spa роутере
-// definePageMeta({
-//   middleware: "auth",
-// });
+definePageMeta обрабатывается в single-spa роутере
+definePageMeta({
+  middleware: "auth",
+});
 
 const {
   chats,

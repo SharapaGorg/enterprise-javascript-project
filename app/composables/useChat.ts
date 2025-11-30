@@ -1,5 +1,6 @@
 import { ref, watch, computed } from "vue";
 import { API_URL } from "~/constants";
+import { createAuthHeaders } from "~/utils/auth";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -185,12 +186,14 @@ export const useChat = () => {
         }));
 
       // Отправляем запрос
+      const authConfig = await createAuthHeaders();
       const { data: response } = await useFetch<ChatResponse>(API_URL + "/chat", {
         method: "POST",
         body: {
           messages: messagesToSend,
           contextData,
         },
+        ...authConfig,
       });
 
       // Обновляем ответ ассистента
