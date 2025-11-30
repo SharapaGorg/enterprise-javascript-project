@@ -26,6 +26,10 @@ console.log('useProfile loaded successfully');
 // Тестируем useBooks
 const { searchBooks } = useBooks();
 console.log('useBooks loaded successfully');
+
+// Тестируем useOnboarding (последний)
+const { isOnboardingCompleted } = useOnboarding();
+console.log('useOnboarding loaded successfully');
 </script>
 
 <style scoped>
