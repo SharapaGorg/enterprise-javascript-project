@@ -184,7 +184,7 @@ export const useChat = () => {
         }));
 
       // Отправляем запрос
-      const response = await $fetch<ChatResponse>("/api/chat", {
+      const { data: response } = await useFetch<ChatResponse>("/api/chat", {
         method: "POST",
         body: {
           messages: messagesToSend,
@@ -195,7 +195,7 @@ export const useChat = () => {
       // Обновляем ответ ассистента
       messages.value[assistantMessageIndex] = {
         role: "assistant",
-        content: response.message,
+        content: response.value?.message || "",
         timestamp: new Date(),
       };
 

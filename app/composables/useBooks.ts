@@ -19,14 +19,16 @@ export const useBooks = () => {
     const queryString = queryParams.toString();
     const url = `/api/books${queryString ? `?${queryString}` : ""}`;
 
-    return await $fetch<BooksApiResponse>(url);
+    const { data } = await useFetch<BooksApiResponse>(url);
+    return data.value;
   };
 
   /**
    * Получить информацию о конкретной книге
    */
   const getBookById = async (id: string) => {
-    return await $fetch<Book>(`/api/books/${id}`);
+    const { data } = await useFetch<Book>(`/api/books/${id}`);
+    return data.value;
   };
 
   /**

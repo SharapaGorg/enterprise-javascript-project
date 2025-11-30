@@ -8,7 +8,7 @@ export const useProfile = () => {
    */
   const getProfile = async () => {
     const authConfig = await createAuthHeaders();
-    return await $fetch<ProfileApiResponse>(API_URL + "/profile", authConfig);
+    return await useFetch<ProfileApiResponse>(API_URL + "/profile", authConfig);
   };
 
   /**
@@ -16,7 +16,7 @@ export const useProfile = () => {
    */
   const updateProfile = async (data: UpdateProfileData) => {
     const authConfig = await createAuthHeaders();
-    return await $fetch<ProfileApiResponse>(API_URL + "/profile", {
+    return await useFetch<ProfileApiResponse>(API_URL + "/profile", {
       method: "PATCH",
       body: data,
       ...authConfig,

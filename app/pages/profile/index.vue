@@ -336,8 +336,18 @@ const { getBooksByStatus, updateBookStatus, removeBookmark } = useBookmarks();
 
 
 // Загружаем профиль
-const { data: profile, pending, error, refresh } = await fetchProfile();
-const profileData = computed(() => profile?.profile);
+const profile = ref(null);
+const pending = ref(true);
+const error = ref(null);
+
+fetchProfile().then(({ data, pending: p, error: e, refresh: r }) => {
+  profile.value = data;
+  pending.value = p;
+  error.value = e;
+  refresh.value = r;
+});
+
+const profileData = computed(() => profile.value?.value?.profile);
 
 // Состояние редактирования
 const isEditing = ref(false);
