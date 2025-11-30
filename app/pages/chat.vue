@@ -1,5 +1,6 @@
 <template>
   <div class="chat-page">
+    <div class="debug-chat">CHAT PAGE LOADED</div>
     <div class="chat-container">
       <button
         v-if="!isChatListOpen"
