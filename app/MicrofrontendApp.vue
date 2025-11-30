@@ -8,13 +8,14 @@
         <p>Route matched: {{ $route.matched.length }}</p>
       </div>
       <router-view v-slot="{ Component, route }">
-        <div v-if="Component">
+        {{ Component }}
+<!--        <div v-if="Component">-->
           <component :is="Component" :key="route.path" />
-        </div>
-        <div v-else class="no-component">
-          <h3>No component found for route: {{ route.path }}</h3>
-          <p>Route object: {{ JSON.stringify(route, null, 2) }}</p>
-        </div>
+<!--        </div>-->
+<!--        <div v-else class="no-component">-->
+        <!--          <h3>No component found for route: {{ route.path }}</h3>-->
+        <!--          <p>Route object: {{ JSON.stringify(route, null, 2) }}</p>-->
+        <!--        </div>-->
       </router-view>
     </main>
     <OnboardingNotification />
