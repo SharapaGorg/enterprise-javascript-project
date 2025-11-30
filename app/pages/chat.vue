@@ -18,6 +18,10 @@ console.log('useAuth loaded successfully');
 // Тестируем useChat
 const { chats, currentChatId } = useChat();
 console.log('useChat loaded successfully');
+
+// Тестируем useProfile
+const { fetchProfile } = useProfile();
+console.log('useProfile loaded successfully');
 </script>
 
 <style scoped>
