@@ -1,20 +1,24 @@
 import type { UpdateProfileData, ProfileApiResponse } from '~~/types/profile';
+import { createAuthHeaders } from '~/utils/auth';
 
 export const useProfile = () => {
   /**
    * Получить профиль текущего пользователя
    */
   const getProfile = async () => {
-    return await $fetch<ProfileApiResponse>('/api/profile');
+    const authConfig = await createAuthHeaders();
+    return await $fetch<ProfileApiResponse>('/api/profile', authConfig);
   };
 
   /**
    * Обновить профиль
    */
   const updateProfile = async (data: UpdateProfileData) => {
+    const authConfig = await createAuthHeaders();
     return await $fetch<ProfileApiResponse>('/api/profile', {
       method: 'PATCH',
       body: data,
+      ...authConfig,
     });
   };
 
@@ -24,6 +28,12 @@ export const useProfile = () => {
   const fetchProfile = () => {
     return useFetch<ProfileApiResponse>('/api/profile', {
       key: 'user-profile',
+      transform: (data) => data,
+      server: false, // Отключаем SSR для авторизованных запросов
+      onRequest: async ({ options }) => {
+        const authConfig = await createAuthHeaders();
+        options.headers = { ...options.headers, ...authConfig.headers };
+      },
     });
   };
 

@@ -1,4 +1,4 @@
-import { serverSupabaseClient } from '#supabase/server';
+import { createServerSupabaseClient } from '../utils/auth';
 import type { UpdateProfileData, UserProfile } from '~~/types/profile';
 
 /**
@@ -7,18 +7,8 @@ import type { UpdateProfileData, UserProfile } from '~~/types/profile';
  */
 export default defineEventHandler(async (event): Promise<any> => {
   try {
-    // Получаем Supabase клиент
-    const supabase = await serverSupabaseClient(event);
-    
-    // Получаем текущего пользователя
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (!user || userError) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Необходима авторизация',
-      });
-    }
+    // Получаем Supabase клиент с проверкой токена из заголовка
+    const { supabase, user } = await createServerSupabaseClient(event);
 
     // Читаем body запроса
     const body = await readBody<UpdateProfileData>(event);
