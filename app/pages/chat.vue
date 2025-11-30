@@ -11,7 +11,9 @@
 <script setup lang="ts">
 console.log('MINIMAL CHAT PAGE - SCRIPT EXECUTING');
 
-// Минимальный скрипт без composables
+// Тестируем useAuth
+const { logout } = useAuth();
+console.log('useAuth loaded successfully');
 </script>
 
 <style scoped>
