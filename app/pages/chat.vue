@@ -14,6 +14,10 @@ console.log('MINIMAL CHAT PAGE - SCRIPT EXECUTING');
 // Тестируем useAuth
 const { logout } = useAuth();
 console.log('useAuth loaded successfully');
+
+// Тестируем useChat
+const { chats, currentChatId } = useChat();
+console.log('useChat loaded successfully');
 </script>
 
 <style scoped>
