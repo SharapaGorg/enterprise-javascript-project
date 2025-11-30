@@ -197,16 +197,21 @@ const createNuxtMocks = (app, router) => {
       const error = ref(null);
       const pending = ref(true);
 
-      try {
-        const response = await fetch(url, opts);
-        data.value = await response.json();
-      } catch (e) {
-        error.value = e;
-      } finally {
-        pending.value = false;
-      }
+      const refresh = async () => {
+        pending.value = true;
+        try {
+          const response = await fetch(url, opts);
+          data.value = await response.json();
+        } catch (e) {
+          error.value = e;
+        } finally {
+          pending.value = false;
+        }
+      };
 
-      return { data, error, pending };
+      await refresh();
+
+      return { data, error, pending, refresh };
     },
     useRuntimeConfig: () => ({
       public: {

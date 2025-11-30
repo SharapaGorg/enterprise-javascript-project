@@ -334,16 +334,6 @@ const { logout } = useAuth();
 const { fetchProfile, updateProfile } = useProfile();
 const { getBooksByStatus, updateBookStatus, removeBookmark } = useBookmarks();
 
-// SEO - заглушка для single-spa
-if (typeof useHead === 'function') {
-  useHead({
-    title: "Профиль - ReadMind AI",
-    meta: [
-      { name: "description", content: "Ваш профиль в ReadMind AI" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
-  });
-}
 
 // Загружаем профиль
 const { data: profile, pending, error, refresh } = await fetchProfile();
