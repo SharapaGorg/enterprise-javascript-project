@@ -22,6 +22,10 @@ console.log('useChat loaded successfully');
 // Тестируем useProfile
 const { fetchProfile } = useProfile();
 console.log('useProfile loaded successfully');
+
+// Тестируем useBooks
+const { searchBooks } = useBooks();
+console.log('useBooks loaded successfully');
 </script>
 
 <style scoped>
