@@ -9,7 +9,13 @@
 </template>
 
 <script setup lang="ts">
+// Тестируем импорты
+import BookCard from "@/components/BookCard.vue";
+import { parseBookRecommendations } from "@/utils/bookParser";
+import type { Book } from "~~/types/books";
+
 console.log('MINIMAL CHAT PAGE - SCRIPT EXECUTING');
+console.log('Imports loaded:', { BookCard: !!BookCard, parseBookRecommendations: !!parseBookRecommendations });
 
 // Тестируем useAuth
 const { logout } = useAuth();
