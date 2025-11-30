@@ -339,12 +339,15 @@ const { getBooksByStatus, updateBookStatus, removeBookmark } = useBookmarks();
 const profile = ref(null);
 const pending = ref(true);
 const error = ref(null);
+const refresh = ref(null);
 
 fetchProfile().then(({ data, pending: p, error: e, refresh: r }) => {
   profile.value = data;
-  pending.value = p;
-  error.value = e;
+  pending.value = p?.value;
+  error.value = e?.value;
   refresh.value = r;
+}).finally(() => {
+  pending.value = false;
 });
 
 const profileData = computed(() => profile.value?.value?.profile);
@@ -561,7 +564,9 @@ const handleSave = async () => {
     successMessage.value = "Профиль успешно обновлен!";
 
     // Обновляем данные
-    await refresh();
+    if (refresh.value) {
+      await refresh.value();
+    }
 
     // Через 1.5 сек возвращаемся в режим просмотра
     setTimeout(() => {
