@@ -230,6 +230,7 @@ import { useBooks } from "@/composables/useBooks";
 import { parseBookRecommendations } from "@/utils/bookParser";
 import type { Book } from "~~/types/books";
 import BookCard from "@/components/BookCard.vue";
+import ChatList from "@/components/ChatList.vue";
 
 definePageMeta({
   middleware: "auth",
