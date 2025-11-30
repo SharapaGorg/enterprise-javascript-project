@@ -301,7 +301,10 @@ const selectedType = ref("Любой");
 const selectedEra = ref("Любая");
 
 // Загружаем профиль для контекста
-const { data: profileData } = await fetchProfile();
+const profileData = ref(null);
+fetchProfile().then(({ data }) => {
+  profileData.value = data;
+});
 
 // Функция для переключения жанра
 function toggleGenre(genre: string) {
