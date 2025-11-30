@@ -18,10 +18,10 @@
           />
           <button
             class="search-button"
-            :disabled="pending"
+            :disabled="pending.value"
             @click="handleSearch"
           >
-            {{ pending ? "Поиск..." : "🔍 Искать" }}
+            {{ pending.value ? "Поиск..." : "🔍 Искать" }}
           </button>
         </div>
 
@@ -54,11 +54,11 @@
         </div>
       </div>
 
-      <div v-if="error" class="error-message">
-        ❌ {{ error.message || "Произошла ошибка при загрузке книг" }}
+      <div v-if="error.value" class="error-message">
+        ❌ {{ error.value.message || "Произошла ошибка при загрузке книг" }}
       </div>
 
-      <div v-if="pending" class="loading">
+      <div v-if="pending.value" class="loading">
         <div class="spinner"></div>
         <p>Загрузка книг...</p>
       </div>
@@ -206,7 +206,7 @@
 
         <div class="pagination-controls">
           <button
-            :disabled="currentPage <= 1 || pending"
+            :disabled="currentPage.value <= 1 || pending.value"
             class="pagination-btn"
             @click="prevPage"
           >
@@ -216,7 +216,7 @@
           <span class="page-number">{{ currentPage }}</span>
 
           <button
-            :disabled="!booksData.hasMore || pending"
+            :disabled="!booksData?.value?.hasMore || pending.value"
             class="pagination-btn"
             @click="nextPage"
           >
@@ -233,7 +233,7 @@ import { onMounted } from "vue";
 import { useBookmarks, type BookStatus } from "@/composables/useBookmarks";
 import type { Book } from "~~/types/books";
 
-const { searchBooks } = useBooks();
+const { searchBooks, getBooks } = useBooks();
 const { addBookmark, removeBookmark, isBookmarked, updateBookStatus } =
   useBookmarks();
 
@@ -343,14 +343,36 @@ const searchParams = computed(() => ({
   limit: 20,
 }));
 
-const { data: booksData, pending, error, refresh } = searchBooks(searchParams);
+const booksData = ref(null);
+const pending = ref(false);
+const error = ref(null);
 
-const books = computed(() => booksData?.books || []);
+// Начальная загрузка при монтировании
+onMounted(async () => {
+  await performSearch();
+});
+
+// Функция поиска
+const performSearch = async () => {
+  pending.value = true;
+  error.value = null;
+  try {
+    const result = await getBooks(searchParams.value);
+    booksData.value = result;
+  } catch (err) {
+    error.value = err;
+    console.error('Ошибка поиска:', err);
+  } finally {
+    pending.value = false;
+  }
+};
+
+const books = computed(() => booksData.value?.books || []);
 
 // Методы
-const handleSearch = () => {
+const handleSearch = async () => {
   currentPage.value = 1;
-  refresh();
+  await performSearch();
 };
 
 const searchExample = (query: string) => {
