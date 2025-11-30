@@ -1,4 +1,5 @@
 import { ref, watch, computed } from "vue";
+import { API_URL } from "~/constants";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -184,7 +185,7 @@ export const useChat = () => {
         }));
 
       // Отправляем запрос
-      const { data: response } = await useFetch<ChatResponse>("/api/chat", {
+      const { data: response } = await useFetch<ChatResponse>(API_URL + "/chat", {
         method: "POST",
         body: {
           messages: messagesToSend,

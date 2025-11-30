@@ -1,6 +1,5 @@
 <template>
   <div class="profile-page">
-    <div class="debug-profile">PROFILE PAGE LOADED</div>
     <div class="container">
       <header class="page-header">
         <h1>👤 Мой профиль</h1>

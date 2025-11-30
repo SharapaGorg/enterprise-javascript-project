@@ -1,15 +1,10 @@
 <template>
   <div class="microfrontend-app">
-    <Navigation />
+    <Navigation/>
     <main class="main-content">
-      <div class="debug-info">
-        <p>Current route: {{ $route.path }}</p>
-        <p>Route name: {{ $route.name }}</p>
-        <p>Route matched: {{ $route.matched.length }}</p>
-      </div>
       <router-view v-slot="{ Component, route }">
         <div v-if="Component">
-          <component :is="Component" :key="route.path" />
+          <component :is="Component" :key="route.path"/>
         </div>
         <div v-else class="no-component">
           <h3>No component found for route: {{ route.path }}</h3>
@@ -17,7 +12,7 @@
         </div>
       </router-view>
     </main>
-    <OnboardingNotification />
+    <OnboardingNotification/>
   </div>
 </template>
 
