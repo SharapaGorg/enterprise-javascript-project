@@ -181,7 +181,7 @@ export const useChat = () => {
       console.log("Отправляем сообщения:", messagesToSend);
       console.log("Контекст:", contextData);
       
-      const { data: response, error: fetchError } = await useFetch<ChatResponse>(API_URL + "/chat", {
+      const { data: response, error: fetchError, pending } = await useFetch<ChatResponse>(API_URL + "/chat", {
         method: "POST",
         body: {
           messages: messagesToSend,
@@ -190,8 +190,17 @@ export const useChat = () => {
         ...authConfig,
       });
 
+      // Ждем завершения запроса
+      while (pending.value) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+
       console.log("Ответ сервера:", response.value);
       console.log("Ошибка запроса:", fetchError.value);
+
+      if (fetchError.value) {
+        throw new Error(fetchError.value.data?.statusMessage || "Ошибка сети");
+      }
 
       // Добавляем ответ ассистента
       if (response.value?.message) {
