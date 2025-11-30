@@ -165,21 +165,12 @@ export const useChat = () => {
     };
     messages.value.push(userMessage);
 
-    // Добавляем placeholder для ответа ассистента
-    const assistantMessageIndex = messages.value.length;
-    messages.value.push({
-      role: "assistant",
-      content: "",
-      timestamp: new Date(),
-    });
-
     isLoading.value = true;
     error.value = null;
 
     try {
       // Подготавливаем массив сообщений для отправки (без timestamp)
       const messagesToSend = messages.value
-        .slice(0, -1) // Убираем последний пустой элемент
         .map((msg) => ({
           role: msg.role,
           content: msg.content,
@@ -187,7 +178,10 @@ export const useChat = () => {
 
       // Отправляем запрос
       const authConfig = await createAuthHeaders();
-      const { data: response } = await useFetch<ChatResponse>(API_URL + "/chat", {
+      console.log("Отправляем сообщения:", messagesToSend);
+      console.log("Контекст:", contextData);
+      
+      const { data: response, error: fetchError } = await useFetch<ChatResponse>(API_URL + "/chat", {
         method: "POST",
         body: {
           messages: messagesToSend,
@@ -196,12 +190,19 @@ export const useChat = () => {
         ...authConfig,
       });
 
-      // Обновляем ответ ассистента
-      messages.value[assistantMessageIndex] = {
-        role: "assistant",
-        content: response.value?.message || "",
-        timestamp: new Date(),
-      };
+      console.log("Ответ сервера:", response.value);
+      console.log("Ошибка запроса:", fetchError.value);
+
+      // Добавляем ответ ассистента
+      if (response.value?.message) {
+        messages.value.push({
+          role: "assistant",
+          content: response.value.message,
+          timestamp: new Date(),
+        });
+      } else {
+        throw new Error("Не удалось получить ответ от сервера");
+      }
 
       // Автоматическое переименование чата, если это первое сообщение
       if (currentChatId.value && messages.value.length === 2) {
@@ -231,8 +232,7 @@ export const useChat = () => {
         err.message ||
         "Произошла ошибка при отправке сообщения";
 
-      // Удаляем сообщение ассистента при ошибке
-      messages.value.pop();
+      // При ошибке не нужно удалять сообщения, так как мы их не добавляли
 
       console.error("Ошибка при отправке сообщения:", err);
     } finally {
