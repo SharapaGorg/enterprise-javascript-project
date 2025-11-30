@@ -2,7 +2,20 @@
   <div class="microfrontend-app">
     <Navigation />
     <main class="main-content">
-      <router-view />
+      <div class="debug-info">
+        <p>Current route: {{ $route.path }}</p>
+        <p>Route name: {{ $route.name }}</p>
+        <p>Route matched: {{ $route.matched.length }}</p>
+      </div>
+      <router-view v-slot="{ Component, route }">
+        <div v-if="Component">
+          <component :is="Component" :key="route.path" />
+        </div>
+        <div v-else class="no-component">
+          <h3>No component found for route: {{ route.path }}</h3>
+          <p>Route object: {{ JSON.stringify(route, null, 2) }}</p>
+        </div>
+      </router-view>
     </main>
     <OnboardingNotification />
   </div>
@@ -34,5 +47,23 @@ body {
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+.debug-info {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: monospace;
+}
+
+.no-component {
+  background: rgba(255, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px;
+  border-radius: 8px;
+  border: 2px solid #ff0000;
+  color: #ff0000;
 }
 </style>
