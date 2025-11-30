@@ -231,21 +231,24 @@ import { parseBookRecommendations } from "@/utils/bookParser";
 import type { Book } from "~~/types/books";
 import BookCard from "@/components/BookCard.vue";
 
+// definePageMeta обрабатывается в single-spa роутере
 definePageMeta({
   middleware: "auth",
 });
 
-// SEO
-useHead({
-  title: "Чат с ИИ - ReadMind AI",
-  meta: [
-    {
-      name: "description",
-      content:
-        "Чат с ИИ-ассистентом для получения рекомендаций книг и обсуждения литературы",
-    },
-  ],
-});
+// SEO - заглушка для single-spa
+if (typeof useHead === 'function') {
+  useHead({
+    title: "Чат с ИИ - ReadMind AI",
+    meta: [
+      {
+        name: "description",
+        content:
+          "Чат с ИИ-ассистентом для получения рекомендаций книг и обсуждения литературы",
+      },
+    ],
+  });
+}
 
 const {
   chats,

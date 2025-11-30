@@ -36,6 +36,17 @@ import RegisterPage from "./app/pages/auth/register.vue";
 import ProfilePage from "./app/pages/profile/index.vue";
 import OnboardingPage from "./app/pages/profile/onboarding.vue";
 
+// Отладка импорта компонентов
+console.log('Components loaded:', {
+  IndexPage: !!IndexPage,
+  BooksPage: !!BooksPage, 
+  ChatPage: !!ChatPage,
+  LoginPage: !!LoginPage,
+  RegisterPage: !!RegisterPage,
+  ProfilePage: !!ProfilePage,
+  OnboardingPage: !!OnboardingPage
+});
+
 // Глобальные middleware
 const authMiddleware = (to, from, next) => {
   console.log('Auth middleware for:', to.path);
@@ -78,31 +89,44 @@ const onboardingMiddleware = (to, from, next) => {
   next();
 };
 
-// Определение маршрутов
+// Определение маршрутов с именами
 const routes = [
   { 
+    name: "index",
     path: "/", 
     component: IndexPage,
     beforeEnter: [onboardingMiddleware]
   },
   { 
+    name: "books",
     path: "/books", 
     component: BooksPage,
     beforeEnter: [authMiddleware, onboardingMiddleware]
   },
   { 
+    name: "chat",
     path: "/chat", 
     component: ChatPage,
     beforeEnter: [authMiddleware, onboardingMiddleware]
   },
-  { path: "/auth/login", component: LoginPage },
-  { path: "/auth/register", component: RegisterPage },
   { 
+    name: "auth-login",
+    path: "/auth/login", 
+    component: LoginPage 
+  },
+  { 
+    name: "auth-register",
+    path: "/auth/register", 
+    component: RegisterPage 
+  },
+  { 
+    name: "profile",
     path: "/profile", 
     component: ProfilePage,
     beforeEnter: [authMiddleware, onboardingMiddleware]
   },
   { 
+    name: "profile-onboarding",
     path: "/profile/onboarding", 
     component: OnboardingPage,
     beforeEnter: [authMiddleware]
@@ -224,12 +248,23 @@ const vueLifecycles = singleSpaVue({
 
     // Добавляем отладку роутера
     router.beforeEach((to, from, next) => {
-      console.log('Router navigation:', { from: from.path, to: to.path });
+      console.log('Router navigation:', { 
+        from: from.path, 
+        to: to.path, 
+        toName: to.name,
+        matched: to.matched.length,
+        component: to.matched[0]?.components?.default 
+      });
       next();
     });
 
     router.afterEach((to, from) => {
-      console.log('Router navigation complete:', { from: from.path, to: to.path });
+      console.log('Router navigation complete:', { 
+        from: from.path, 
+        to: to.path,
+        toName: to.name,
+        matched: to.matched.length 
+      });
     });
 
     app.use(router);

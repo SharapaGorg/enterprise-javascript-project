@@ -316,11 +316,13 @@ onMounted(() => {
   }
 });
 
-// SEO
-useHead({
-  title: "Поиск книг - ReadMind AI",
-  meta: [{ name: "description", content: "Поиск книг через Google Books API" }],
-});
+// SEO - заглушка для single-spa
+if (typeof useHead === 'function') {
+  useHead({
+    title: "Поиск книг - ReadMind AI",
+    meta: [{ name: "description", content: "Поиск книг через Google Books API" }],
+  });
+}
 
 // Поисковые параметры
 const searchQuery = ref("");

@@ -324,6 +324,7 @@
 <script setup lang="ts">
 import { useBookmarks, type BookStatus } from "@/composables/useBookmarks";
 
+// definePageMeta обрабатывается в single-spa роутере
 definePageMeta({
   middleware: "auth",
 });
@@ -332,14 +333,16 @@ const { logout } = useAuth();
 const { fetchProfile, updateProfile } = useProfile();
 const { getBooksByStatus, updateBookStatus, removeBookmark } = useBookmarks();
 
-// SEO
-useHead({
-  title: "Профиль - ReadMind AI",
-  meta: [
-    { name: "description", content: "Ваш профиль в ReadMind AI" },
-    { name: "robots", content: "noindex, nofollow" },
-  ],
-});
+// SEO - заглушка для single-spa
+if (typeof useHead === 'function') {
+  useHead({
+    title: "Профиль - ReadMind AI",
+    meta: [
+      { name: "description", content: "Ваш профиль в ReadMind AI" },
+      { name: "robots", content: "noindex, nofollow" },
+    ],
+  });
+}
 
 // Загружаем профиль
 const { data: profile, pending, error, refresh } = await fetchProfile();
