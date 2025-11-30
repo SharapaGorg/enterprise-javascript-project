@@ -36,15 +36,77 @@ import RegisterPage from "./app/pages/auth/register.vue";
 import ProfilePage from "./app/pages/profile/index.vue";
 import OnboardingPage from "./app/pages/profile/onboarding.vue";
 
+// Глобальные middleware
+const authMiddleware = (to, from, next) => {
+  console.log('Auth middleware for:', to.path);
+  
+  // Если пользователь не авторизован, редирект на страницу входа
+  if (!globalUser.value) {
+    if (to.path !== '/auth/login' && to.path !== '/auth/register' && to.path !== '/') {
+      next('/auth/login');
+      return;
+    }
+  }
+  next();
+};
+
+const onboardingMiddleware = (to, from, next) => {
+  console.log('Onboarding middleware for:', to.path);
+  
+  // Если пользователь на странице онбординга, пропускаем проверку
+  if (to.path === '/profile/onboarding') {
+    next();
+    return;
+  }
+
+  // Проверяем авторизацию
+  if (!globalUser.value) {
+    next();
+    return;
+  }
+
+  // Проверяем, пройден ли онбординг (только на клиенте)
+  if (typeof window !== 'undefined') {
+    const onboardingCompleted = localStorage.getItem('onboardingCompleted') === 'true';
+    
+    if (!onboardingCompleted) {
+      // Редирект на онбординг, если не пройден
+      next('/profile/onboarding');
+      return;
+    }
+  }
+  next();
+};
+
 // Определение маршрутов
 const routes = [
-  { path: "/", component: IndexPage },
-  { path: "/books", component: BooksPage },
-  { path: "/chat", component: ChatPage },
+  { 
+    path: "/", 
+    component: IndexPage,
+    beforeEnter: [onboardingMiddleware]
+  },
+  { 
+    path: "/books", 
+    component: BooksPage,
+    beforeEnter: [authMiddleware, onboardingMiddleware]
+  },
+  { 
+    path: "/chat", 
+    component: ChatPage,
+    beforeEnter: [authMiddleware, onboardingMiddleware]
+  },
   { path: "/auth/login", component: LoginPage },
   { path: "/auth/register", component: RegisterPage },
-  { path: "/profile", component: ProfilePage },
-  { path: "/profile/onboarding", component: OnboardingPage },
+  { 
+    path: "/profile", 
+    component: ProfilePage,
+    beforeEnter: [authMiddleware, onboardingMiddleware]
+  },
+  { 
+    path: "/profile/onboarding", 
+    component: OnboardingPage,
+    beforeEnter: [authMiddleware]
+  },
   { path: "/:pathMatch(.*)*", redirect: "/" },
 ];
 
@@ -60,9 +122,11 @@ const globalUser = ref(null);
 // Инициализируем пользователя сразу
 supabase.auth.getUser().then(({ data }) => {
   globalUser.value = data.user;
+  console.log('Initial user loaded:', data.user?.email);
 });
 
 supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event, session?.user?.email);
   globalUser.value = session?.user ?? null;
 });
 
@@ -97,7 +161,10 @@ const createNuxtMocks = (app, router) => {
 
   // Nuxt composables заглушки
   const nuxtMocks = {
-    definePageMeta: () => {},
+    definePageMeta: (meta) => {
+      // Обрабатываем middleware в definePageMeta
+      console.log('definePageMeta called with:', meta);
+    },
     navigateTo: (to) => router.push(to),
     useRoute: () => router.currentRoute.value,
     useRouter: () => router,
@@ -153,6 +220,16 @@ const vueLifecycles = singleSpaVue({
     const router = createRouter({
       history: createWebHistory("/read-mind-ai"),
       routes,
+    });
+
+    // Добавляем отладку роутера
+    router.beforeEach((to, from, next) => {
+      console.log('Router navigation:', { from: from.path, to: to.path });
+      next();
+    });
+
+    router.afterEach((to, from) => {
+      console.log('Router navigation complete:', { from: from.path, to: to.path });
     });
 
     app.use(router);
