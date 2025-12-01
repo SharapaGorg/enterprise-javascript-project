@@ -75,14 +75,17 @@ export default defineEventHandler(async (event): Promise<{ message: string; usag
     }
 
     // Фиксированные настройки (без возможности изменения)
-    const model = 'tngtech/deepseek-r1t2-chimera:free';
+    // Используем более надежную модель, если основная недоступна
+    const primaryModel = 'tngtech/deepseek-r1t2-chimera:free';
+    const fallbackModel = 'deepseek/deepseek-chat:free'; // Альтернативная бесплатная модель
+    let model = primaryModel;
     const temperature = 0.7;
     const maxTokens = 2000;
     const includeOnboarding = true;
     const includeProfile = true;
 
     // Формируем системный промпт с контекстом
-    let systemPrompt = 'Ты - персональный литературный ассистент ReadMind AI. Помогай пользователям с вопросами о книгах, рекомендациями, обсуждением литературных произведений. Будь дружелюбным, знающим и полезным.\n\n';
+    let systemPrompt = 'Ты - персональный литературный ассистент ReadMind AI. ОБЯЗАТЕЛЬНО отвечай только на русском языке. Помогай пользователям с вопросами о книгах, рекомендациями, обсуждением литературных произведений. Будь дружелюбным, знающим и полезным. Все твои ответы должны быть исключительно на русском языке.\n\n';
     
     // Важное правило для рекомендаций книг
     systemPrompt += 'ВАЖНО: Когда ты рекомендуешь книги пользователю, в конце твоего ответа ОБЯЗАТЕЛЬНО добавь блок с рекомендациями в следующем формате:\n\n';

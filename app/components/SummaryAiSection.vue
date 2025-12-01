@@ -209,11 +209,11 @@ async function startGeneration(maxWords = MAX_WORDS_DEFAULT) {
   const messagesToSend = [
     {
       role: 'system',
-      content: 'Ты — помощник, который последовательно генерирует краткое содержание книги. Пиши по абзацам, логично, полно, но не более указанного лимита слов.'
+      content: 'Ты — помощник, который последовательно генерирует краткое содержание книги на русском языке. ОБЯЗАТЕЛЬНО отвечай только на русском языке. Пиши по абзацам, логично, полно, но не более указанного лимита слов. Все ответы должны быть исключительно на русском языке.'
     },
     {
       role: 'user',
-      content: `Сгенерируй краткое содержание (summary) для книги. Формат: несколько кратких абзацев. Максимум слов: ${maxWords}.
+      content: `Сгенерируй краткое содержание (summary) для книги НА РУССКОМ ЯЗЫКЕ. Формат: несколько кратких абзацев на русском языке. Максимум слов: ${maxWords}. ОБЯЗАТЕЛЬНО отвечай на русском языке.
 Title: ${props.book.title || '—'}
 Authors: ${props.book.authors?.join(', ') || '—'}
 Publisher: ${props.book.publisher || '—'}
@@ -232,23 +232,51 @@ Categories: ${props.book.categories?.join(', ') || '—'}
       body: JSON.stringify({ messages: messagesToSend, stream: true })
     });
 
-    const rawText = await res.clone().text().catch(() => '');
-
-    const immediate = extractMessageFromJsonString(rawText);
+    // Обрабатываем ошибки
     if (!res.ok) {
-      if (immediate) {
-        content.value = truncateWords(immediate, maxWords);
-      } else {
-        content.value = truncateWords(rawText || 'Ошибка генерации', maxWords);
-      }
+      const errorText = await res.text().catch(() => '');
+      const errorMessage = extractMessageFromJsonString(errorText) || errorText || 'Ошибка генерации';
+      isError.value = true;
+      errorMessage.value = errorMessage;
       isLoading.value = false;
+      controller = null;
       return;
     }
 
+    // Проверяем content-type для определения типа ответа
+    const contentType = res.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+    
+    // Если это JSON, читаем как JSON (API endpoint возвращает JSON, не стрим)
+    if (isJson) {
+      try {
+        const jsonData = await res.json();
+
+        if (jsonData && jsonData.message && typeof jsonData.message === 'string') {
+          const message = jsonData.message.trim();
+
+          if (message.length > 0 && message !== '...') {
+            const truncated = truncateWords(message, maxWords);
+
+            if (truncated && truncated.trim().length > 0 && truncated.trim() !== '...') {
+              content.value = truncated;
+              isLoading.value = false;
+              controller = null;
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        // Если не удалось распарсить JSON, продолжаем обработку
+      }
+    }
+
+    // Пытаемся обработать как стрим
     if (res.body && res.body.getReader) {
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let done = false;
+      let streamContent = '';
 
       while (!done) {
         const { value, done: d } = await reader.read();
@@ -258,20 +286,55 @@ Categories: ${props.book.categories?.join(', ') || '—'}
         }
         if (value) {
           const chunk = decoder.decode(value, { stream: true });
+          streamContent += chunk;
           processStreamChunk(chunk, maxWords);
         }
       }
 
-      content.value = truncateWords(content.value, maxWords);
+      // Если после стриминга контент пустой, пытаемся извлечь из всего потока
+      if (!content.value || content.value.trim().length === 0 || content.value.trim() === '...') {
+        const extracted = extractMessageFromJsonString(streamContent);
+        if (extracted && extracted.trim().length > 0 && extracted.trim() !== '...') {
+          const truncated = truncateWords(extracted, maxWords);
+          if (truncated && truncated.trim().length > 0) {
+            content.value = truncated;
+          }
+        }
+      } else {
+        const truncated = truncateWords(content.value, maxWords);
+        if (truncated && truncated.trim().length > 0) {
+          content.value = truncated;
+        }
+      }
+      
       isLoading.value = false;
       controller = null;
       return;
     }
 
-    if (immediate) {
-      content.value = truncateWords(immediate, maxWords);
+    // Fallback: пытаемся получить текст
+    const rawText = await res.text().catch(() => '');
+    const extracted = extractMessageFromJsonString(rawText);
+
+    if (extracted && extracted.trim().length > 0 && extracted.trim() !== '...') {
+      const truncated = truncateWords(extracted, maxWords);
+      if (truncated && truncated.trim().length > 0) {
+        content.value = truncated;
+      } else {
+        isError.value = true;
+        errorMessage.value = 'Получен пустой ответ от сервера';
+      }
+    } else if (rawText && rawText.trim().length > 0 && rawText.trim() !== '...') {
+      const truncated = truncateWords(rawText, maxWords);
+      if (truncated && truncated.trim().length > 0) {
+        content.value = truncated;
+      } else {
+        isError.value = true;
+        errorMessage.value = 'Не удалось обработать ответ от сервера';
+      }
     } else {
-      content.value = truncateWords(rawText || '', maxWords);
+      isError.value = true;
+      errorMessage.value = 'Не удалось получить ответ от сервера';
     }
   } catch (err: any) {
     if (err?.name === 'AbortError') {
@@ -288,28 +351,42 @@ Categories: ${props.book.categories?.join(', ') || '—'}
 
 function processStreamChunk(chunk: string, maxWords: number) {
   if (!chunk) return;
+  
   const extracted = extractMessageFromJsonString(chunk);
-  if (extracted) {
-    content.value += (content.value ? '\n' : '') + extracted;
-    content.value = truncateWords(content.value, maxWords);
+  if (extracted && extracted.trim().length > 0 && extracted.trim() !== '...') {
+    // Добавляем только если это не пустая строка и не только троеточие
+    const toAdd = extracted.trim();
+    if (toAdd && toAdd !== '...') {
+      content.value += (content.value ? '\n' : '') + toAdd;
+    }
+    // Не обрезаем во время стриминга, только в конце
     return;
   }
+  
   const cleaned = chunk
     .split('\n')
     .map(line => line.replace(/^data:\s*/, '').trim())
     .filter(Boolean)
+    .filter(line => line !== '...' && line.length > 0)
     .join(' ');
-  if (cleaned) {
+    
+  if (cleaned && cleaned.trim() !== '...') {
     content.value += (content.value ? '\n' : '') + cleaned;
-    content.value = truncateWords(content.value, maxWords);
   }
+  // Не обрезаем во время стриминга, только в конце
 }
 
 function truncateWords(text: string, maxWords = MAX_WORDS_DEFAULT) {
-  if (!text) return '';
-  const words = text.trim().split(/\s+/);
-  if (words.length <= maxWords) return text.trim();
-  return words.slice(0, maxWords).join(' ').replace(/\s+$/, '') + '...';
+  if (!text || !text.trim()) return '';
+  const trimmed = text.trim();
+  // Защита от строки, состоящей только из троеточия
+  if (trimmed === '...' || trimmed === '.' || trimmed === '..') return '';
+  const words = trimmed.split(/\s+/).filter(word => word.length > 0);
+  if (words.length === 0) return '';
+  if (words.length <= maxWords) return trimmed;
+  const truncated = words.slice(0, maxWords).join(' ');
+  // Добавляем троеточие только если текст действительно был обрезан
+  return truncated + '...';
 }
 </script>
 
