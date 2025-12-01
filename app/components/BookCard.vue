@@ -4,7 +4,7 @@
       <div v-if="(book.cover || book.thumbnail) && !imageError" class="image-container">
         <div class="image-skeleton" :class="{ 'loaded': imageLoaded }"></div>
         <img
-          :src="book.cover || book.thumbnail"
+          :src="getOptimizedImageUrl()"
           :alt="book.title"
           loading="lazy"
           class="book-image"
@@ -72,9 +72,28 @@ const imageLoaded = ref(false);
 const imageDimensions = getImageDimensions('medium');
 
 function getOptimizedImageUrl() {
-  const imageUrl = props.book.cover || props.book.thumbnail;
-  // Don't modify the URL too aggressively - just ensure HTTPS
-  return imageUrl ? imageUrl.replace('http://', 'https://') : '';
+  let imageUrl = props.book.cover || props.book.thumbnail;
+  if (!imageUrl) return '';
+  
+  // Ensure HTTPS
+  imageUrl = imageUrl.replace('http://', 'https://');
+  
+  // For Google Books images, optimize quality
+  if (imageUrl.includes('books.google.com') || imageUrl.includes('googleusercontent.com')) {
+    // Remove any existing zoom parameter
+    imageUrl = imageUrl.replace(/&zoom=\d/, '');
+    // Add zoom for better quality
+    imageUrl += '&zoom=1';
+    
+    // Remove edge curl if present
+    imageUrl = imageUrl.replace('&edge=curl', '');
+    
+    // Fix double & if present
+    imageUrl = imageUrl.replace(/&&/g, '&');
+  }
+  
+  console.log('Book image URL:', imageUrl);
+  return imageUrl;
 }
 
 const isBookmarkedValue = computed(() => isBookmarked(props.book.id));

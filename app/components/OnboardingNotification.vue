@@ -6,13 +6,14 @@
         <div class="notification-text">
           <p class="notification-title">Помогите нам лучше понять вас!</p>
           <p class="notification-message">
-            Пройдите онбординг, чтобы получать персонализированные рекомендации книг
+            Пройдите онбординг, чтобы получать персонализированные рекомендации
+            книг
           </p>
         </div>
         <div class="notification-actions">
-          <NuxtLink to="/profile/onboarding" class="btn-notification">
+          <RouterLink to="/profile/onboarding" class="btn-notification">
             Пройти онбординг
-          </NuxtLink>
+          </RouterLink>
           <button class="btn-close" @click="dismiss">×</button>
         </div>
       </div>
@@ -23,7 +24,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, computed } from "vue";
 import { useOnboarding } from "@/composables/useOnboarding";
-import { useSupabaseUser } from "#imports";
 import { useRoute } from "vue-router";
 
 const { completed } = useOnboarding();
@@ -36,7 +36,7 @@ const KEY_DISMISSED = "onboardingNotificationDismissed";
 const DISMISS_DURATION = 24 * 60 * 60 * 1000; // 24 часа
 
 // Проверяем, не находимся ли мы на странице онбординга
-const isOnboardingPage = computed(() => route.path === '/profile/onboarding');
+const isOnboardingPage = computed(() => route.path === "/profile/onboarding");
 
 function checkAndShow() {
   // Показываем только если:
@@ -44,7 +44,7 @@ function checkAndShow() {
   // 2. Онбординг не пройден
   // 3. Мы не на странице онбординга
   // 4. Уведомление не было отклонено недавно
-  
+
   if (!user.value) {
     show.value = false;
     return;
@@ -247,4 +247,3 @@ watch([() => completed.value, () => user.value, () => route.path], () => {
   }
 }
 </style>
-

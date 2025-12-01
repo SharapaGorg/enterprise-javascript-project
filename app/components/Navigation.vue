@@ -1,30 +1,28 @@
 <template>
   <nav class="navigation">
-    <NuxtLink to="/" class="nav-logo">
-      📚 ReadMind AI
-    </NuxtLink>
+    <RouterLink to="/" class="nav-logo"> 📚 ReadMind AI </RouterLink>
     <div class="nav-menu">
-      <NuxtLink
+      <RouterLink
         to="/books"
         class="nav-item"
         :class="{ 'nav-item--active': $route.path.startsWith('/books') }"
       >
         📚 Книги
-      </NuxtLink>
-      <NuxtLink
+      </RouterLink>
+      <RouterLink
         to="/chat"
         class="nav-item"
         :class="{ 'nav-item--active': $route.path.startsWith('/chat') }"
       >
         🤖 Чат
-      </NuxtLink>
-      <NuxtLink
+      </RouterLink>
+      <RouterLink
         to="/profile"
         class="nav-item"
         :class="{ 'nav-item--active': $route.path.startsWith('/profile') }"
       >
         👤 Профиль
-      </NuxtLink>
+      </RouterLink>
     </div>
   </nav>
 </template>
@@ -111,4 +109,3 @@
   }
 }
 </style>
-

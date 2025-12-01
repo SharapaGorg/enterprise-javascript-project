@@ -4,7 +4,7 @@
       <header class="page-header">
         <h1>📚 Поиск книг</h1>
         <p class="subtitle">Поиск книг через Google Books API</p>
-        <NuxtLink to="/" class="back-link">← На главную</NuxtLink>
+        <RouterLink to="/" class="back-link">← На главную</RouterLink>
       </header>
 
       <div class="search-section">
@@ -16,8 +16,12 @@
             class="search-input"
             @keyup.enter="handleSearch"
           />
-          <button class="search-button" :disabled="pending" @click="handleSearch">
-            {{ pending ? 'Поиск...' : '🔍 Искать' }}
+          <button
+            class="search-button"
+            :disabled="pending"
+            @click="handleSearch"
+          >
+            {{ pending ? "Поиск..." : "🔍 Искать" }}
           </button>
         </div>
 
@@ -51,7 +55,7 @@
       </div>
 
       <div v-if="error" class="error-message">
-        ❌ {{ error.message || 'Произошла ошибка при загрузке книг' }}
+        ❌ {{ error?.message || "Произошла ошибка при загрузке книг" }}
       </div>
 
       <div v-if="pending" class="loading">
@@ -64,7 +68,10 @@
           <div class="book-card-content">
             <div class="book-cover">
               <div v-if="book.cover || book.thumbnail" class="image-container">
-                <div class="image-skeleton" :class="{ 'loaded': imageLoadStates[book.id] }"></div>
+                <div
+                  class="image-skeleton"
+                  :class="{ loaded: imageLoadStates[book.id] }"
+                ></div>
                 <img
                   :src="getHighQualityImageUrl(book)"
                   :alt="book.title"
@@ -76,12 +83,16 @@
               </div>
               <div v-else class="no-cover">📖</div>
             </div>
-            
+
             <div class="book-info">
               <h3 class="book-title">{{ book.title }}</h3>
-              <p v-if="book.subtitle" class="book-subtitle">{{ book.subtitle }}</p>
-              <p class="book-authors">{{ book.authors.join(', ') || 'Автор неизвестен' }}</p>
-              
+              <p v-if="book.subtitle" class="book-subtitle">
+                {{ book.subtitle }}
+              </p>
+              <p class="book-authors">
+                {{ book.authors.join(", ") || "Автор неизвестен" }}
+              </p>
+
               <div v-if="book.rating" class="book-rating">
                 ⭐ {{ book.rating }} ({{ book.ratingsCount }} отзывов)
               </div>
@@ -112,52 +123,56 @@
           </div>
 
           <div class="book-actions">
+            <button
+              v-if="isBookmarked(book.id)"
+              class="btn-bookmark active"
+              title="Удалить из закладок"
+              @click="handleRemoveBookmark(book)"
+            >
+              ⭐ В закладках
+            </button>
+            <div v-else class="bookmark-dropdown">
               <button
-                v-if="isBookmarked(book.id)"
-                class="btn-bookmark active"
-                @click="handleRemoveBookmark(book)"
-                title="Удалить из закладок"
+                class="btn-bookmark"
+                title="Добавить в закладки"
+                @click="
+                  showBookmarkMenu =
+                    showBookmarkMenu === book.id ? null : book.id
+                "
               >
-                ⭐ В закладках
+                ➕ В закладки
               </button>
-              <div v-else class="bookmark-dropdown">
+              <div
+                v-if="showBookmarkMenu === book.id"
+                class="bookmark-menu"
+                @click.stop
+              >
                 <button
-                  class="btn-bookmark"
-                  @click="showBookmarkMenu = showBookmarkMenu === book.id ? null : book.id"
-                  title="Добавить в закладки"
+                  v-for="statusOption in statusOptions"
+                  :key="statusOption.value"
+                  class="bookmark-menu-item"
+                  @click="handleAddBookmark(book, statusOption.value)"
                 >
-                  ➕ В закладки
+                  {{ statusOption.emoji }} {{ statusOption.label }}
                 </button>
-                <div
-                  v-if="showBookmarkMenu === book.id"
-                  class="bookmark-menu"
-                  @click.stop
-                >
-                  <button
-                    v-for="statusOption in statusOptions"
-                    :key="statusOption.value"
-                    class="bookmark-menu-item"
-                    @click="handleAddBookmark(book, statusOption.value)"
-                  >
-                    {{ statusOption.emoji }} {{ statusOption.label }}
-                  </button>
-                </div>
               </div>
-              <NuxtLink
-                v-if="book.previewLink"
-                :to="{ name: 'books-id', params: { id: book.id } }"
-                class="btn-preview"
-              >
-                👁️ Предпросмотр
-              </NuxtLink>
-              <a
-                v-if="book.infoLink"
-                :href="book.infoLink"
-                target="_blank"
-                class="btn-info"
-              >
-                ℹ️ Подробнее
-              </a>
+            </div>
+            <a
+              v-if="book.previewLink"
+              :href="book.previewLink"
+              target="_blank"
+              class="btn-preview"
+            >
+              👁️ Предпросмотр
+            </a>
+            <a
+              v-if="book.infoLink"
+              :href="book.infoLink"
+              target="_blank"
+              class="btn-info"
+            >
+              ℹ️ Подробнее
+            </a>
           </div>
         </div>
       </div>
@@ -185,9 +200,10 @@
 
       <div v-if="booksData && booksData.total > 0" class="pagination">
         <div class="pagination-info">
-          Найдено: {{ booksData.total }} книг | Страница {{ booksData.page }} из {{ booksData.totalPages }}
+          Найдено: {{ booksData.total }} книг | Страница {{ booksData.page }} из
+          {{ booksData.totalPages }}
         </div>
-        
+
         <div class="pagination-controls">
           <button
             :disabled="currentPage <= 1 || pending"
@@ -196,11 +212,11 @@
           >
             ← Предыдущая
           </button>
-          
+
           <span class="page-number">{{ currentPage }}</span>
-          
+
           <button
-            :disabled="!booksData.hasMore || pending"
+            :disabled="!booksData?.hasMore || pending"
             class="pagination-btn"
             @click="nextPage"
           >
@@ -213,17 +229,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useBookmarks, type BookStatus } from '@/composables/useBookmarks';
-import type { Book } from '~~/types/books';
+import { onMounted } from "vue";
+import { useBookmarks, type BookStatus } from "@/composables/useBookmarks";
+import type { Book } from "~~/types/books";
 
-const { searchBooks } = useBooks();
-const {
-  addBookmark,
-  removeBookmark,
-  isBookmarked,
-  updateBookStatus,
-} = useBookmarks();
+const { searchBooks, getBooks } = useBooks();
+const { addBookmark, removeBookmark, isBookmarked, updateBookStatus } =
+  useBookmarks();
 
 const showBookmarkMenu = ref<string | null>(null);
 
@@ -231,12 +243,12 @@ const showBookmarkMenu = ref<string | null>(null);
 const imageLoadStates = ref<Record<string, boolean>>({});
 
 const statusOptions = [
-  { value: 'reading' as BookStatus, label: 'Читаю', emoji: '📖' },
-  { value: 'planned' as BookStatus, label: 'В планах', emoji: '📝' },
-  { value: 'finished' as BookStatus, label: 'Прочитано', emoji: '✅' },
-  { value: 'shelved' as BookStatus, label: 'Отложено', emoji: '⏸️' },
-  { value: 'dropped' as BookStatus, label: 'Брошено', emoji: '❌' },
-  { value: 'favourite' as BookStatus, label: 'Любимые', emoji: '💖' },
+  { value: "reading" as BookStatus, label: "Читаю", emoji: "📖" },
+  { value: "planned" as BookStatus, label: "В планах", emoji: "📝" },
+  { value: "finished" as BookStatus, label: "Прочитано", emoji: "✅" },
+  { value: "shelved" as BookStatus, label: "Отложено", emoji: "⏸️" },
+  { value: "dropped" as BookStatus, label: "Брошено", emoji: "❌" },
+  { value: "favourite" as BookStatus, label: "Любимые", emoji: "💖" },
 ];
 
 const handleAddBookmark = (book: Book, status: BookStatus) => {
@@ -247,36 +259,39 @@ const handleAddBookmark = (book: Book, status: BookStatus) => {
 // Optimize Google Books image URL for higher quality
 const getHighQualityImageUrl = (book: Book): string => {
   const imageUrl = book.cover || book.thumbnail;
-  if (!imageUrl) return '';
-  
+  if (!imageUrl) return "";
+
   let url = imageUrl;
-  
+
   // For Google Books images, we can add parameters for better quality
-  if (url.includes('books.google.com') || url.includes('googleusercontent.com')) {
+  if (
+    url.includes("books.google.com") ||
+    url.includes("googleusercontent.com")
+  ) {
     // Remove any existing zoom parameter
-    url = url.replace(/&zoom=\d/, '');
+    url = url.replace(/&zoom=\d/, "");
     // Add high zoom level
-    url += '&zoom=2';
-    
+    url += "&zoom=2";
+
     // Remove edge curl effect if present
-    url = url.replace('&edge=curl', '');
-    
+    url = url.replace("&edge=curl", "");
+
     // Add printsec parameter for better quality
-    if (!url.includes('printsec=')) {
-      url += '&printsec=frontcover';
+    if (!url.includes("printsec=")) {
+      url += "&printsec=frontcover";
     }
-    
+
     // Add img=1 parameter
-    if (!url.includes('img=')) {
-      url += '&img=1';
+    if (!url.includes("img=")) {
+      url += "&img=1";
     }
   }
-  
+
   return url;
 };
 
 const handleRemoveBookmark = (book: Book) => {
-  if (confirm('Удалить книгу из закладок?')) {
+  if (confirm("Удалить книгу из закладок?")) {
     removeBookmark(book.id);
   }
 };
@@ -292,29 +307,29 @@ const handleImageError = (bookId: string) => {
 // Закрываем меню при клике вне его
 onMounted(() => {
   if (process.client) {
-    document.addEventListener('click', (e) => {
+    document.addEventListener("click", (e) => {
       const target = e.target as HTMLElement;
-      if (!target.closest('.bookmark-dropdown')) {
+      if (!target.closest(".bookmark-dropdown")) {
         showBookmarkMenu.value = null;
       }
     });
   }
 });
 
-// SEO
-useHead({
-  title: 'Поиск книг - ReadMind AI',
-  meta: [
-    { name: 'description', content: 'Поиск книг через Google Books API' },
-  ],
-});
+// SEO - заглушка для single-spa
+if (typeof useHead === 'function') {
+  useHead({
+    title: "Поиск книг - ReadMind AI",
+    meta: [{ name: "description", content: "Поиск книг через Google Books API" }],
+  });
+}
 
-// Поисковые параметры    
-const searchQuery = ref('');
-const author = ref('');
-const category = ref('');
-const language = ref('ru');
-const orderBy = ref<'relevance' | 'newest'>('relevance');
+// Поисковые параметры
+const searchQuery = ref("");
+const author = ref("");
+const category = ref("");
+const language = ref("ru");
+const orderBy = ref<"relevance" | "newest">("relevance");
 const currentPage = ref(1);
 
 // Реактивный поиск
@@ -328,14 +343,43 @@ const searchParams = computed(() => ({
   limit: 20,
 }));
 
-const { data: booksData, pending, error, refresh } = searchBooks(searchParams);
+const booksData = ref({
+  books: [],
+  total: 0,
+  page: 1,
+  limit: 20,
+  totalPages: 0,
+  hasMore: false
+});
+const pending = ref(false);
+const error = ref(null);
+
+// Начальная загрузка при монтировании
+onMounted(async () => {
+  await performSearch();
+});
+
+// Функция поиска
+const performSearch = async () => {
+  pending.value = true;
+  error.value = null;
+  try {
+    const result = await getBooks(searchParams.value);
+    booksData.value = result;
+  } catch (err) {
+    error.value = err;
+    console.error('Ошибка поиска:', err);
+  } finally {
+    pending.value = false;
+  }
+};
 
 const books = computed(() => booksData.value?.books || []);
 
 // Методы
-const handleSearch = () => {
+const handleSearch = async () => {
   currentPage.value = 1;
-  refresh();
+  await performSearch();
 };
 
 const searchExample = (query: string) => {
@@ -345,19 +389,19 @@ const searchExample = (query: string) => {
 
 const nextPage = () => {
   currentPage.value++;
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
 const prevPage = () => {
   if (currentPage.value > 1) {
     currentPage.value--;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 };
 
 const truncateText = (text: string, maxLength: number) => {
   if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
+  return text.substring(0, maxLength) + "...";
 };
 </script>
 
@@ -500,7 +544,9 @@ const truncateText = (text: string, maxLength: number) => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .books-grid {
@@ -514,7 +560,9 @@ const truncateText = (text: string, maxLength: number) => {
   background: white;
   border-radius: 16px;
   overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   display: flex;
   flex-direction: column;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -888,30 +936,30 @@ const truncateText = (text: string, maxLength: number) => {
   .search-box {
     flex-direction: column;
   }
-  
+
   .books-grid {
     grid-template-columns: 1fr;
     gap: 20px;
   }
-  
+
   .book-card-content {
     flex-direction: column;
     align-items: center;
     text-align: center;
     padding: 16px;
   }
-  
+
   .book-cover {
     width: 150px;
     height: 225px;
   }
-  
+
   .book-actions {
     flex-direction: column;
     gap: 12px;
     padding: 16px;
   }
-  
+
   .book-actions > * {
     width: 100%;
     min-width: unset;
@@ -936,4 +984,3 @@ const truncateText = (text: string, maxLength: number) => {
   }
 }
 </style>
-

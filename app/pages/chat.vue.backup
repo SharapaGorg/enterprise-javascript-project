@@ -230,11 +230,11 @@ import { useBooks } from "@/composables/useBooks";
 import { parseBookRecommendations } from "@/utils/bookParser";
 import type { Book } from "~~/types/books";
 import BookCard from "@/components/BookCard.vue";
-import ChatList from "@/components/ChatList.vue";
 
-definePageMeta({
-  middleware: "auth",
-});
+// definePageMeta обрабатывается в single-spa роутере
+// definePageMeta({
+//   middleware: "auth",
+// });
 
 const {
   chats,
@@ -300,10 +300,7 @@ const selectedType = ref("Любой");
 const selectedEra = ref("Любая");
 
 // Загружаем профиль для контекста
-const profileData = ref(null);
-fetchProfile().then(({ data }) => {
-  profileData.value = data;
-});
+const { data: profileData } = await fetchProfile();
 
 // Функция для переключения жанра
 function toggleGenre(genre: string) {

@@ -4,7 +4,7 @@
       <header class="page-header">
         <h1>👤 Мой профиль</h1>
         <div class="header-actions">
-          <NuxtLink to="/" class="btn-home"> 🏠 На главную </NuxtLink>
+          <RouterLink to="/" class="btn-home"> 🏠 На главную </RouterLink>
           <button class="btn-logout" @click="handleLogout">Выйти</button>
         </div>
       </header>
@@ -63,7 +63,7 @@
                 </p>
                 <p class="empty-hint">
                   Добавляйте книги в закладки со страницы
-                  <NuxtLink to="/books">поиска книг</NuxtLink>.
+                  <RouterLink to="/books">поиска книг</RouterLink>.
                 </p>
               </div>
             </div>
@@ -324,6 +324,7 @@
 <script setup lang="ts">
 import { useBookmarks, type BookStatus } from "@/composables/useBookmarks";
 
+// definePageMeta обрабатывается в single-spa роутере
 definePageMeta({
   middleware: "auth",
 });
@@ -332,18 +333,23 @@ const { logout } = useAuth();
 const { fetchProfile, updateProfile } = useProfile();
 const { getBooksByStatus, updateBookStatus, removeBookmark } = useBookmarks();
 
-// SEO
-useHead({
-  title: "Профиль - ReadMind AI",
-  meta: [
-    { name: "description", content: "Ваш профиль в ReadMind AI" },
-    { name: "robots", content: "noindex, nofollow" },
-  ],
-});
 
 // Загружаем профиль
-const { data: profile, pending, error, refresh } = fetchProfile();
-const profileData = computed(() => profile.value?.profile);
+const profile = ref(null);
+const pending = ref(true);
+const error = ref(null);
+const refresh = ref(null);
+
+fetchProfile().then(({ data, pending: p, error: e, refresh: r }) => {
+  profile.value = data;
+  pending.value = p?.value;
+  error.value = e?.value;
+  refresh.value = r;
+}).finally(() => {
+  pending.value = false;
+});
+
+const profileData = computed(() => profile.value?.value?.profile);
 
 // Состояние редактирования
 const isEditing = ref(false);
@@ -557,7 +563,9 @@ const handleSave = async () => {
     successMessage.value = "Профиль успешно обновлен!";
 
     // Обновляем данные
-    await refresh();
+    if (refresh.value) {
+      await refresh.value();
+    }
 
     // Через 1.5 сек возвращаемся в режим просмотра
     setTimeout(() => {

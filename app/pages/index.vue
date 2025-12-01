@@ -1,8 +1,6 @@
 <template>
   <div class="landing-page">
     <div class="container">
-      <Navigation />
-
       <div v-if="!user" class="welcome-section">
         <h1 class="welcome-title">
           AI-powered персональный<br />литературный ассистент
@@ -11,12 +9,12 @@
           Получайте персонализированные рекомендации книг на основе искусственного интеллекта
         </p>
         <div class="welcome-actions">
-          <NuxtLink to="/auth/register" class="btn btn-primary">
+          <RouterLink to="/auth/register" class="btn btn-primary">
             Начать бесплатно
-          </NuxtLink>
-          <NuxtLink to="/auth/login" class="btn btn-secondary">
+          </RouterLink>
+          <RouterLink to="/auth/login" class="btn btn-secondary">
             Войти
-          </NuxtLink>
+          </RouterLink>
         </div>
       </div>
 
@@ -28,23 +26,9 @@
 </template>
 
 <script setup lang="ts">
-import Navigation from '@/components/Navigation.vue';
 import BookmarksPreview from '@/components/BookmarksPreview.vue';
 
 const { user } = useAuth();
-
-// SEO мета-теги
-useHead({
-  title: 'ReadMind AI - AI-powered персональный литературный ассистент',
-  meta: [
-    {
-      name: 'description',
-      content: 'Получайте персонализированные рекомендации книг на основе искусственного интеллекта. Управляйте личной библиотекой и получайте краткие саммари книг.',
-    },
-    { property: 'og:title', content: 'ReadMind AI - Персональный литературный ассистент' },
-    { property: 'og:description', content: 'AI-powered платформа для книжных рекомендаций' },
-  ],
-});
 </script>
 
 <style scoped>

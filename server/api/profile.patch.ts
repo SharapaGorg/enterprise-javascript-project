@@ -1,5 +1,5 @@
-import { serverSupabaseClient } from '#supabase/server';
-import type { UpdateProfileData, UserProfile } from '~~/types/profile';
+import { createServerSupabaseClient } from "../utils/auth";
+import type { UpdateProfileData, UserProfile } from "~~/types/profile";
 
 /**
  * Обновление профиля текущего пользователя
@@ -7,18 +7,8 @@ import type { UpdateProfileData, UserProfile } from '~~/types/profile';
  */
 export default defineEventHandler(async (event): Promise<any> => {
   try {
-    // Получаем Supabase клиент
-    const supabase = await serverSupabaseClient(event);
-    
-    // Получаем текущего пользователя
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-    if (!user || userError) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: 'Необходима авторизация',
-      });
-    }
+    // Получаем Supabase клиент с проверкой токена из заголовка
+    const { supabase, user } = await createServerSupabaseClient(event);
 
     // Читаем body запроса
     const body = await readBody<UpdateProfileData>(event);
@@ -27,7 +17,7 @@ export default defineEventHandler(async (event): Promise<any> => {
     if (!body || Object.keys(body).length === 0) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'Необходимо указать данные для обновления',
+        statusMessage: "Необходимо указать данные для обновления",
       });
     }
 
@@ -36,7 +26,7 @@ export default defineEventHandler(async (event): Promise<any> => {
       if (body.reading_goal < 0 || body.reading_goal > 1000) {
         throw createError({
           statusCode: 400,
-          statusMessage: 'Цель чтения должна быть от 0 до 1000 книг',
+          statusMessage: "Цель чтения должна быть от 0 до 1000 книг",
         });
       }
     }
@@ -46,13 +36,13 @@ export default defineEventHandler(async (event): Promise<any> => {
       if (!Array.isArray(body.favorite_genres)) {
         throw createError({
           statusCode: 400,
-          statusMessage: 'Любимые жанры должны быть массивом',
+          statusMessage: "Любимые жанры должны быть массивом",
         });
       }
       if (body.favorite_genres.length > 10) {
         throw createError({
           statusCode: 400,
-          statusMessage: 'Максимум 10 любимых жанров',
+          statusMessage: "Максимум 10 любимых жанров",
         });
       }
     }
@@ -63,28 +53,29 @@ export default defineEventHandler(async (event): Promise<any> => {
       updated_at: new Date().toISOString(),
     };
 
-    const { data: updatedProfile, error } = await (supabase
-      .from('profiles') as any)
+    const { data: updatedProfile, error } = await (
+      supabase.from("profiles") as any
+    )
       .update(updateData)
-      .eq('id', user.id)
+      .eq("id", user.id)
       .select()
       .single();
 
     if (error) {
-      console.error('Ошибка при обновлении профиля:', error);
+      console.error("Ошибка при обновлении профиля:", error);
       throw createError({
         statusCode: 500,
-        statusMessage: 'Ошибка при обновлении профиля',
+        statusMessage: "Ошибка при обновлении профиля",
       });
     }
 
     return {
       profile: updatedProfile as UserProfile,
       success: true,
-      message: 'Профиль успешно обновлен',
+      message: "Профиль успешно обновлен",
     };
   } catch (error: any) {
-    console.error('Ошибка в PATCH /api/profile:', error);
+    console.error("Ошибка в PATCH /api/profile:", error);
 
     if (error.statusCode) {
       throw error;
@@ -92,8 +83,7 @@ export default defineEventHandler(async (event): Promise<any> => {
 
     throw createError({
       statusCode: 500,
-      statusMessage: 'Внутренняя ошибка сервера',
+      statusMessage: "Внутренняя ошибка сервера",
     });
   }
 });
-

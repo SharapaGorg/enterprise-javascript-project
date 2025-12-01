@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BroJS Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f0f0f0;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        #microfrontend-root {
+            min-height: 400px;
+            border: 2px dashed #ccc;
+            padding: 20px;
+            background: #fafafa;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 BroJS Integration Test</h1>
+        <p>Testing ReadMind AI microfrontend integration</p>
+        
+        <div id="status"></div>
+        
+        <h3>Microfrontend Container:</h3>
+        <div id="microfrontend-root"></div>
+        
+        <h3>Debug Log:</h3>
+        <div id="log" class="log"></div>
+        
+        <button onclick="testMount()" style="margin: 10px 5px; padding: 8px 16px;">🚀 Mount App</button>
+        <button onclick="testUnmount()" style="margin: 10px 5px; padding: 8px 16px;">🛑 Unmount App</button>
+        <button onclick="clearLog()" style="margin: 10px 5px; padding: 8px 16px;">🧹 Clear Log</button>
+    </div>
+    
+    <script src="./dist/index.js"></script>
+    <script>
+        let isMounted = false;
+        const statusEl = document.getElementById('status');
+        const logEl = document.getElementById('log');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${type.toUpperCase()}: ${message}`;
+            console.log(logEntry);
+            logEl.innerHTML += logEntry + '\n';
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+        
+        function clearLog() {
+            logEl.innerHTML = '';
+        }
+        
+        function updateStatus(message, color = '#333') {
+            statusEl.innerHTML = `<div style="color: ${color}; font-weight: bold;">${message}</div>`;
+        }
+        
+        function testMount() {
+            if (isMounted) {
+                log('App already mounted', 'warn');
+                return;
+            }
+            
+            log('Starting mount process...');
+            
+            if (!window.ReadMindAI) {
+                log('ReadMindAI object not found!', 'error');
+                updateStatus('❌ ReadMindAI not available', 'red');
+                return;
+            }
+            
+            try {
+                const mountProps = {
+                    name: 'read-mind-ai',
+                    domElement: document.getElementById('microfrontend-root'),
+                    singleSpa: {},
+                    mountParcel: () => {}
+                };
+                
+                log(`Calling mount with props: ${JSON.stringify({...mountProps, domElement: 'DOM Element'})}`);
+                
+                window.ReadMindAI.mount(mountProps).then(() => {
+                    log('Mount completed successfully!', 'success');
+                    updateStatus('✅ App mounted successfully', 'green');
+                    isMounted = true;
+                }).catch((error) => {
+                    log(`Mount failed: ${error.message}`, 'error');
+                    updateStatus('❌ Mount failed', 'red');
+                    console.error('Mount error:', error);
+                });
+                
+            } catch (error) {
+                log(`Mount error: ${error.message}`, 'error');
+                updateStatus('❌ Mount error', 'red');
+                console.error('Mount error:', error);
+            }
+        }
+        
+        function testUnmount() {
+            if (!isMounted) {
+                log('App not mounted', 'warn');
+                return;
+            }
+            
+            try {
+                log('Calling unmount...');
+                
+                window.ReadMindAI.unmount({
+                    name: 'read-mind-ai'
+                }).then(() => {
+                    log('Unmount completed successfully!', 'success');
+                    updateStatus('🛑 App unmounted', 'orange');
+                    isMounted = false;
+                }).catch((error) => {
+                    log(`Unmount failed: ${error.message}`, 'error');
+                    console.error('Unmount error:', error);
+                });
+                
+            } catch (error) {
+                log(`Unmount error: ${error.message}`, 'error');
+                console.error('Unmount error:', error);
+            }
+        }
+        
+        // Initial check
+        if (window.ReadMindAI) {
+            log('ReadMindAI object loaded successfully');
+            log(`Available functions: ${Object.keys(window.ReadMindAI).join(', ')}`);
+            updateStatus('🎯 Ready to test', 'blue');
+        } else {
+            log('ReadMindAI object not found!', 'error');
+            updateStatus('❌ ReadMindAI not loaded', 'red');
+        }
+    </script>
+</body>
+</html>
